@@ -1,0 +1,215 @@
+<template>
+  <v-container fluid>
+    <page-header
+      title="Pracownicy"
+      subtitle="Zarządzaj użytkownikami systemu"
+      icon="mdi-account-group"
+      icon-color="indigo"
+      :breadcrumbs="[{ title: 'Użytkownicy', disabled: true }]"
+    >
+      <template #actions>
+        <v-btn
+          color="primary"
+          variant="elevated"
+          prepend-icon="mdi-plus"
+          @click="openCreateDialog"
+        >
+          Dodaj użytkownika
+        </v-btn>
+      </template>
+    </page-header>
+
+    <v-card elevation="2" class="mt-4">
+      <v-data-table
+        :headers="headers"
+        :items="usersStore.items"
+        :loading="usersStore.loading"
+        :search="search"
+        hover
+      >
+        <template v-slot:top>
+          <v-toolbar flat density="compact" color="transparent" class="px-4 py-2">
+            <v-text-field
+              v-model="search"
+              prepend-inner-icon="mdi-magnify"
+              label="Szukaj (imię, email)..."
+              single-line
+              hide-details
+              density="compact"
+              variant="outlined"
+              style="max-width: 400px"
+            ></v-text-field>
+            <v-spacer></v-spacer>
+            <v-btn
+              icon
+              color="primary"
+              @click="refreshList"
+              :loading="usersStore.loading"
+            >
+              <v-icon>mdi-refresh</v-icon>
+            </v-btn>
+          </v-toolbar>
+        </template>
+
+        <!-- Role Column -->
+        <template v-slot:item.role="{ item }">
+          <v-chip
+            size="small"
+            :color="formatUserRole(item.role).color"
+            class="font-weight-medium"
+          >
+            <v-icon start size="small">{{ formatUserRole(item.role).icon }}</v-icon>
+            {{ formatUserRole(item.role).label }}
+          </v-chip>
+        </template>
+
+        <!-- RCP Access Column (PIN) -->
+        <template v-slot:item.has_pin="{ item }">
+          <v-tooltip
+            location="top"
+            :text="
+              item.has_pin
+                ? 'Dostęp do panelu RCP (PIN ustawiony)'
+                : 'Brak dostępu do panelu RCP'
+            "
+          >
+            <template v-slot:activator="{ props }">
+              <div v-bind="props" class="d-flex justify-center">
+                <v-icon
+                  v-if="item.has_pin"
+                  color="success"
+                  icon="mdi-check-bold"
+                ></v-icon>
+                <v-icon v-else color="grey-lighten-2" icon="mdi-minus"></v-icon>
+              </div>
+            </template>
+          </v-tooltip>
+        </template>
+
+        <!-- Status Column -->
+        <template v-slot:item.is_active="{ item }">
+          <v-chip
+            size="small"
+            :color="item.is_active ? 'success' : 'error'"
+            variant="flat"
+          >
+            {{ item.is_active ? "Aktywny" : "Nieaktywny" }}
+          </v-chip>
+        </template>
+
+        <!-- Actions -->
+        <template v-slot:item.actions="{ item }">
+          <div class="d-flex justify-end">
+            <v-tooltip text="Edytuj" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon="mdi-pencil"
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  @click="editUser(item)"
+                />
+              </template>
+            </v-tooltip>
+
+            <v-tooltip :text="item.is_active ? 'Dezaktywuj' : 'Aktywuj'" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  :icon="item.is_active ? 'mdi-account-off' : 'mdi-account-check'"
+                  size="small"
+                  variant="text"
+                  :color="item.is_active ? 'warning' : 'success'"
+                  @click="toggleActive(item)"
+                />
+              </template>
+            </v-tooltip>
+
+            <v-tooltip text="Usuń" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon="mdi-delete"
+                  size="small"
+                  variant="text"
+                  color="error"
+                  @click="deleteUser(item)"
+                />
+              </template>
+            </v-tooltip>
+          </div>
+        </template>
+
+        <!-- No Data State -->
+        <template v-slot:no-data>
+          <div class="text-center py-8 text-medium-emphasis">
+            <v-icon size="48" class="mb-2">mdi-account-off</v-icon>
+            <div>Brak użytkowników do wyświetlenia</div>
+            <v-btn variant="text" color="primary" class="mt-2" @click="refreshList">
+              Odśwież
+            </v-btn>
+          </div>
+        </template>
+      </v-data-table>
+    </v-card>
+
+    <!-- Dialog tworzenia/edycji użytkownika -->
+    <user-form-dialog v-model="dialog" :user="editedUser" @saved="refreshList" />
+  </v-container>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useUsersStore } from "@/stores/users";
+import PageHeader from "@/components/layout/PageHeader.vue";
+import UserFormDialog from "@/components/users/UserFormDialog.vue";
+import { useStatusFormatter } from "@/composables/useStatusFormatter";
+
+const usersStore = useUsersStore();
+const { formatUserRole } = useStatusFormatter();
+
+const search = ref("");
+const dialog = ref(false);
+const editedUser = ref(null);
+
+const headers = [
+  { title: "Imię i Nazwisko", key: "name", align: "start" },
+  { title: "Email", key: "email", align: "start" },
+  { title: "Rola", key: "role", align: "start" },
+  { title: "Dostęp RCP", key: "has_pin", align: "center" }, // Nowa kolumna
+  { title: "Status", key: "is_active", align: "center" },
+  { title: "Akcje", key: "actions", align: "end", sortable: false },
+];
+
+const refreshList = async () => {
+  await usersStore.fetchUsers();
+};
+
+const openCreateDialog = () => {
+  editedUser.value = null; // null oznacza tryb tworzenia
+  dialog.value = true;
+};
+
+const editUser = (user: any) => {
+  editedUser.value = user; // Przekazujemy obiekt usera do edycji
+  dialog.value = true;
+};
+
+const toggleActive = async (user: any) => {
+  const action = user.is_active ? "dezaktywować" : "aktywować";
+  if (confirm(`Czy na pewno chcesz ${action} konto użytkownika ${user.name}?`)) {
+    await usersStore.toggleActive(user);
+  }
+};
+
+const deleteUser = async (user: any) => {
+  if (confirm(`Czy na pewno trwale usunąć użytkownika ${user.name}?`)) {
+    await usersStore.deleteUser(user.id);
+  }
+};
+
+onMounted(() => {
+  refreshList();
+});
+</script>
