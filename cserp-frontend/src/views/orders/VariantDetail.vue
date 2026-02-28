@@ -33,8 +33,8 @@
             :budget-services="budgetServices"
             :actual-materials-cost="actualMaterialsCost"
             :actual-services-cost="actualServicesCost"
+            :quantity="variant.quantity ?? 1"
             :tkw-z-wyceny="variant.tkw_z_wyceny ?? null"
-            :tkw-rzeczywiste="variant.tkw_rzeczywiste ?? null"
           />
 
           <!-- 3. Wyceny -->

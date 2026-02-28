@@ -43,12 +43,11 @@ return new class extends Migration {
             // Link do starego systemu prototypów (opcjonalny, zostawiamy dla kompatybilności wstecznej jeśli potrzebne)
             $table->unsignedBigInteger('approved_prototype_id')->nullable();
 
-            // TKW — Techniczny Koszt Wytworzenia
-            // tkw_z_wyceny: automatycznie ustawiane przy zatwierdzeniu wyceny (materiały + usługi),
-            //               ale użytkownik może je nadpisać ręcznie
+            // TKW z wyceny — Techniczny Koszt Wytworzenia jednej sztuki (szacunkowy)
+            // Automatycznie ustawiane przy zatwierdzeniu wyceny: (materiały + usługi) / ilość,
+            // ale użytkownik może je nadpisać ręcznie.
+            // TKW rzeczywiste NIE jest przechowywane — obliczane na bieżąco z kosztów rzeczywistych.
             $table->decimal('tkw_z_wyceny', 10, 2)->nullable();
-            // tkw_rzeczywiste: wpisywane ręcznie przez użytkownika po zakończeniu produkcji
-            $table->decimal('tkw_rzeczywiste', 10, 2)->nullable();
 
             $table->timestamps();
 

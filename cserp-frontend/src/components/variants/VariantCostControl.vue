@@ -8,29 +8,69 @@
     <v-card-text class="pt-6">
       <!-- Główne podsumowanie -->
       <v-row class="mb-4">
+        <!-- LEWA: Budżet -->
         <v-col cols="6">
           <div class="text-caption text-uppercase font-weight-bold text-medium-emphasis">
-            Budżet Całkowity (Z Wyceny)
+            Budżet Całkowity
           </div>
           <div class="text-h4 font-weight-black text-blue-grey-darken-2">
             {{ formatCurrency(budgetTotal) }}
           </div>
+          <!-- TKW z wyceny (na sztukę) -->
+          <div class="text-caption text-medium-emphasis mt-1">
+            <span v-if="tkwZWyceny != null">
+              TKW z wyceny:
+              <strong class="text-deep-purple-darken-1">{{ formatCurrency(tkwZWyceny) }} / szt.</strong>
+            </span>
+            <span v-else class="font-italic">Brak TKW z wyceny</span>
+          </div>
         </v-col>
+
+        <!-- PRAWA: Rzeczywiste -->
         <v-col cols="6" class="text-right">
           <div class="text-caption text-uppercase font-weight-bold text-medium-emphasis">
             Wykorzystanie budżetu
           </div>
           <div
             class="text-h4 font-weight-black"
-            :class="totalCostActual > budgetTotal ? 'text-error' : 'text-success'"
+            :class="totalCostActual > budgetTotal && budgetTotal > 0 ? 'text-error' : 'text-success'"
           >
             {{ formatCurrency(totalCostActual) }}
           </div>
-          <div class="text-caption">
-            {{ calculatePercentage(totalCostActual, budgetTotal) }}%
+          <!-- TKW rzeczywiste (obliczane automatycznie) -->
+          <div class="text-caption text-medium-emphasis mt-1">
+            <span v-if="quantity > 0 && totalCostActual > 0">
+              TKW rzeczywiste:
+              <strong
+                :class="
+                  tkwZWyceny != null && tkwRzeczywisteCalc > tkwZWyceny
+                    ? 'text-error'
+                    : tkwZWyceny != null && tkwRzeczywisteCalc < tkwZWyceny
+                    ? 'text-success'
+                    : 'text-grey-darken-2'
+                "
+              >
+                {{ formatCurrency(tkwRzeczywisteCalc) }} / szt.
+              </strong>
+            </span>
+            <span v-else class="font-italic">Brak kosztów rzeczywistych</span>
+          </div>
+          <!-- % wykorzystania -->
+          <div v-if="budgetTotal > 0" class="text-caption mt-1">
+            {{ calculatePercentage(totalCostActual, budgetTotal) }}% budżetu
           </div>
         </v-col>
       </v-row>
+
+      <!-- Pasek budżetu -->
+      <v-progress-linear
+        v-if="budgetTotal > 0"
+        :model-value="calculatePercentage(totalCostActual, budgetTotal)"
+        :color="totalCostActual > budgetTotal ? 'error' : 'blue-grey'"
+        height="8"
+        rounded
+        class="mb-6"
+      />
 
       <v-divider class="mb-6" />
 
@@ -51,7 +91,7 @@
               <span class="text-medium-emphasis">Rzeczywiste:</span>
               <strong
                 :class="
-                  actualMaterialsCost > budgetMaterials
+                  budgetMaterials > 0 && actualMaterialsCost > budgetMaterials
                     ? 'text-error'
                     : 'text-grey-darken-3'
                 "
@@ -83,7 +123,7 @@
               <span class="text-medium-emphasis">Rzeczywiste:</span>
               <strong
                 :class="
-                  actualServicesCost > budgetServices
+                  budgetServices > 0 && actualServicesCost > budgetServices
                     ? 'text-error'
                     : 'text-grey-darken-3'
                 "
@@ -100,69 +140,6 @@
           </v-card>
         </v-col>
       </v-row>
-
-      <!-- TKW — widoczne gdy przynajmniej jedna wartość jest ustawiona -->
-      <template v-if="tkwZWyceny != null || tkwRzeczywiste != null">
-        <v-divider class="my-6" />
-
-        <div class="d-flex align-center mb-3">
-          <v-icon color="deep-purple" class="mr-2">mdi-cash-multiple</v-icon>
-          <span class="text-subtitle-1 font-weight-bold">TKW — Techniczny Koszt Wytworzenia</span>
-        </div>
-
-        <v-row>
-          <!-- TKW z wyceny -->
-          <v-col cols="12" md="6">
-            <v-card variant="outlined" class="pa-3">
-              <div class="text-caption text-uppercase font-weight-bold text-medium-emphasis mb-1">
-                TKW z wyceny
-              </div>
-              <div class="text-h5 font-weight-black text-deep-purple-darken-1">
-                {{ tkwZWyceny != null ? formatCurrency(tkwZWyceny) : '–' }}
-              </div>
-            </v-card>
-          </v-col>
-
-          <!-- TKW rzeczywiste -->
-          <v-col cols="12" md="6">
-            <v-card variant="outlined" class="pa-3">
-              <div class="text-caption text-uppercase font-weight-bold text-medium-emphasis mb-1">
-                TKW rzeczywiste
-              </div>
-              <div
-                class="text-h5 font-weight-black"
-                :class="tkwRzeczywiste != null && tkwZWyceny != null
-                  ? (tkwRzeczywiste > tkwZWyceny ? 'text-error' : 'text-success')
-                  : 'text-deep-purple-darken-1'"
-              >
-                {{ tkwRzeczywiste != null ? formatCurrency(tkwRzeczywiste) : '–' }}
-              </div>
-              <div
-                v-if="tkwZWyceny != null && tkwRzeczywiste != null"
-                class="text-caption mt-1"
-                :class="tkwDiff > 0 ? 'text-error' : tkwDiff < 0 ? 'text-success' : 'text-medium-emphasis'"
-              >
-                {{ tkwDiff > 0 ? '▲' : tkwDiff < 0 ? '▼' : '=' }}
-                {{ tkwDiff > 0 ? '+' : '' }}{{ formatCurrency(tkwDiff) }}
-                ({{ tkwDiffPercent }}% planu)
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- Pasek postępu TKW -->
-        <div v-if="tkwZWyceny != null && tkwRzeczywiste != null" class="mt-3">
-          <v-progress-linear
-            :model-value="calculatePercentage(tkwRzeczywiste, tkwZWyceny)"
-            :color="tkwRzeczywiste > tkwZWyceny ? 'error' : 'deep-purple'"
-            height="10"
-            rounded
-          />
-          <div class="text-caption text-medium-emphasis text-right mt-1">
-            {{ calculatePercentage(tkwRzeczywiste, tkwZWyceny) }}% planu TKW
-          </div>
-        </div>
-      </template>
     </v-card-text>
   </v-card>
 </template>
@@ -176,25 +153,28 @@ const props = defineProps<{
   budgetServices: number;
   actualMaterialsCost: number;
   actualServicesCost: number;
+  quantity: number;
   tkwZWyceny?: number | null;
-  tkwRzeczywiste?: number | null;
 }>();
 
 const { formatCurrency } = useFormatters();
 
-const budgetTotal = computed(() => props.budgetMaterials + props.budgetServices);
+// Budżet całkowity: z wyceny jeśli istnieje, w przeciwnym razie TKW z wyceny × ilość
+const budgetTotal = computed(() => {
+  const fromQuotation = props.budgetMaterials + props.budgetServices;
+  if (fromQuotation > 0) return fromQuotation;
+  if (props.tkwZWyceny && props.quantity > 0) return props.tkwZWyceny * props.quantity;
+  return 0;
+});
+
 const totalCostActual = computed(
   () => props.actualMaterialsCost + props.actualServicesCost
 );
 
-const tkwDiff = computed(() => {
-  if (props.tkwZWyceny == null || props.tkwRzeczywiste == null) return 0;
-  return props.tkwRzeczywiste - props.tkwZWyceny;
-});
-
-const tkwDiffPercent = computed(() => {
-  if (!props.tkwZWyceny || props.tkwRzeczywiste == null) return 0;
-  return Math.round((tkwDiff.value / props.tkwZWyceny) * 100);
+// TKW rzeczywiste = koszty rzeczywiste / ilość (obliczane automatycznie, nie z bazy)
+const tkwRzeczywisteCalc = computed(() => {
+  if (!props.quantity || props.quantity === 0) return 0;
+  return totalCostActual.value / props.quantity;
 });
 
 const calculatePercentage = (actual: number, total: number): number => {

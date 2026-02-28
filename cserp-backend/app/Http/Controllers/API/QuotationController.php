@@ -288,9 +288,12 @@ class QuotationController extends Controller
                     'approved_by_user_id' => auth()->id(),
                 ]);
 
-                // Automatycznie ustaw TKW z wyceny na wariancie (materiały + usługi, bez marży)
-                $quotation->variant->update([
-                    'tkw_z_wyceny' => $quotation->total_materials_cost + $quotation->total_services_cost,
+                // Automatycznie ustaw TKW z wyceny (koszt 1 szt.) = (mat + usł) / ilość
+                $variant = $quotation->variant;
+                $totalCost = $quotation->total_materials_cost + $quotation->total_services_cost;
+                $quantity = max(1, (int) $variant->quantity);
+                $variant->update([
+                    'tkw_z_wyceny' => round($totalCost / $quantity, 2),
                 ]);
 
                 return response()->json([

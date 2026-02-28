@@ -28,7 +28,6 @@ class Variant extends Model
         'feedback_notes',
         'approved_prototype_id',
         'tkw_z_wyceny',
-        'tkw_rzeczywiste',
     ];
 
     protected $casts = [
@@ -38,7 +37,6 @@ class Variant extends Model
         'status' => VariantStatus::class,
         'is_approved' => 'boolean',
         'tkw_z_wyceny' => 'decimal:2',
-        'tkw_rzeczywiste' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -190,7 +190,6 @@ class VariantController extends Controller
                 'is_approved'     => 'boolean',
                 'feedback_notes'  => 'nullable|string',
                 'tkw_z_wyceny'    => 'nullable|numeric|min:0',
-                'tkw_rzeczywiste' => 'nullable|numeric|min:0',
             ]);
         }
 
