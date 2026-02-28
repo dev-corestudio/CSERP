@@ -182,13 +182,15 @@ class VariantController extends Controller
         } else {
             // Warianty: pelna edycja
             $validated = $request->validate([
-                'name'          => 'sometimes|string|max:255',
-                'quantity'      => 'sometimes|integer|min:1',
-                'description'   => 'nullable|string',
-                'type'          => ['sometimes', Rule::enum(VariantType::class)],
-                'status'        => ['sometimes', Rule::enum(VariantStatus::class)],
-                'is_approved'   => 'boolean',
-                'feedback_notes' => 'nullable|string',
+                'name'            => 'sometimes|string|max:255',
+                'quantity'        => 'sometimes|integer|min:1',
+                'description'     => 'nullable|string',
+                'type'            => ['sometimes', Rule::enum(VariantType::class)],
+                'status'          => ['sometimes', Rule::enum(VariantStatus::class)],
+                'is_approved'     => 'boolean',
+                'feedback_notes'  => 'nullable|string',
+                'tkw_z_wyceny'    => 'nullable|numeric|min:0',
+                'tkw_rzeczywiste' => 'nullable|numeric|min:0',
             ]);
         }
 

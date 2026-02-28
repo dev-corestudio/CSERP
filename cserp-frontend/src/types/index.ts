@@ -57,6 +57,10 @@ export interface Variant {
     is_approved: boolean; // NOWE (dla prototypu)
     feedback_notes?: string; // NOWE
 
+    // TKW — Techniczny Koszt Wytworzenia
+    tkw_z_wyceny?: number | null;     // auto z zatwierdzonej wyceny, możliwe do nadpisania
+    tkw_rzeczywiste?: number | null;  // wpisywane ręcznie
+
     created_at: string;
     updated_at: string; // WAŻNE: data ostatniej aktualizacji
 

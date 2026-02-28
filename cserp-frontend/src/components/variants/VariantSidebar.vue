@@ -138,6 +138,73 @@
     </v-card>
 
     <!-- ========================================== -->
+    <!-- Sekcja TKW                                -->
+    <!-- ========================================== -->
+    <v-card v-if="!variant?.is_group" class="mb-4 bg-white border" elevation="1">
+      <v-card-title class="d-flex align-center pb-2">
+        <v-icon start size="small" color="deep-purple">mdi-cash-multiple</v-icon>
+        TKW
+      </v-card-title>
+      <v-divider class="mb-2 mx-4" />
+
+      <v-card-text class="pa-4 pt-0">
+        <!-- TKW z wyceny -->
+        <div class="detail-row">
+          <div class="label">
+            TKW z wyceny
+            <v-tooltip text="Automatycznie obliczane z zatwierdzonej wyceny (materiały + usługi). Możesz wpisać wartość ręcznie." location="top">
+              <template v-slot:activator="{ props: tooltipProps }">
+                <v-icon v-bind="tooltipProps" size="x-small" class="ml-1 text-medium-emphasis">mdi-information-outline</v-icon>
+              </template>
+            </v-tooltip>
+          </div>
+          <div class="value">
+            <inline-edit-field
+              :model-value="variant?.tkw_z_wyceny != null ? String(variant.tkw_z_wyceny) : ''"
+              type="number"
+              icon-position="left"
+              placeholder="–"
+              text-class="font-weight-bold text-body-1"
+              :loading="inlineLoading === 'tkw_z_wyceny'"
+              @save="(val) => $emit('update-inline', 'tkw_z_wyceny', val || null)"
+            />
+            <span v-if="variant?.tkw_z_wyceny != null" class="text-caption text-medium-emphasis ml-1">zł</span>
+          </div>
+        </div>
+
+        <!-- TKW rzeczywiste -->
+        <div class="detail-row">
+          <div class="label">TKW rzeczywiste</div>
+          <div class="value">
+            <inline-edit-field
+              :model-value="variant?.tkw_rzeczywiste != null ? String(variant.tkw_rzeczywiste) : ''"
+              type="number"
+              icon-position="left"
+              placeholder="Wpisz wartość..."
+              text-class="font-weight-bold text-body-1"
+              :loading="inlineLoading === 'tkw_rzeczywiste'"
+              @save="(val) => $emit('update-inline', 'tkw_rzeczywiste', val || null)"
+            />
+            <span v-if="variant?.tkw_rzeczywiste != null" class="text-caption text-medium-emphasis ml-1">zł</span>
+          </div>
+        </div>
+
+        <!-- Różnica TKW -->
+        <div v-if="variant?.tkw_z_wyceny != null && variant?.tkw_rzeczywiste != null" class="mt-2">
+          <v-chip
+            size="small"
+            :color="tkwDiff > 0 ? 'error' : tkwDiff < 0 ? 'success' : 'default'"
+            variant="tonal"
+            class="w-100 d-flex justify-center"
+          >
+            <v-icon start size="x-small">{{ tkwDiff > 0 ? 'mdi-trending-up' : tkwDiff < 0 ? 'mdi-trending-down' : 'mdi-minus' }}</v-icon>
+            Odchyłka: {{ tkwDiff > 0 ? '+' : '' }}{{ formatCurrency(tkwDiff) }}
+          </v-chip>
+        </div>
+      </v-card-text>
+    </v-card>
+
+    <!-- ========================================== -->
     <!-- Sekcja Prototypu                           -->
     <!-- ========================================== -->
     <v-card
@@ -244,7 +311,7 @@ const metadataStore = useMetadataStore();
 
 // Import formatters
 const { formatVariantType, formatPriority } = useStatusFormatter();
-const { formatDateOnly } = useFormatters();
+const { formatDateOnly, formatCurrency } = useFormatters();
 
 const variantTypeLabel = computed(
   () => formatVariantType(props.variant?.type || "").label
@@ -253,6 +320,12 @@ const variantTypeColor = computed(
   () => formatVariantType(props.variant?.type || "").color
 );
 const variantTypeIcon = computed(() => formatVariantType(props.variant?.type || "").icon);
+
+const tkwDiff = computed(() => {
+  const rzeczywiste = Number(props.variant?.tkw_rzeczywiste) || 0;
+  const zWyceny = Number(props.variant?.tkw_z_wyceny) || 0;
+  return rzeczywiste - zWyceny;
+});
 </script>
 
 <style scoped>
