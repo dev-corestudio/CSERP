@@ -134,22 +134,9 @@
             <span class="text-caption text-medium-emphasis ml-1">szt.</span>
           </div>
         </div>
-      </v-card-text>
-    </v-card>
 
-    <!-- ========================================== -->
-    <!-- Sekcja TKW                                -->
-    <!-- ========================================== -->
-    <v-card v-if="!variant?.is_group" class="mb-4 bg-white border" elevation="1">
-      <v-card-title class="d-flex align-center pb-2">
-        <v-icon start size="small" color="deep-purple">mdi-cash-multiple</v-icon>
-        TKW
-      </v-card-title>
-      <v-divider class="mb-2 mx-4" />
-
-      <v-card-text class="pa-4 pt-0">
-        <!-- TKW z wyceny (edytowalne) -->
-        <div class="detail-row">
+        <!-- TKW z wyceny -->
+        <div v-if="!variant?.is_group" class="detail-row">
           <div class="label">
             TKW z wyceny
             <v-tooltip
