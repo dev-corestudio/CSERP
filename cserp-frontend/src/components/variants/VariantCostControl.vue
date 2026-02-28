@@ -67,7 +67,7 @@
         v-if="budgetTotal > 0"
         :model-value="calculatePercentage(totalCostActual, budgetTotal)"
         :color="totalCostActual > budgetTotal ? 'error' : 'blue-grey'"
-        height="8"
+        height="14"
         rounded
         class="mb-6"
       />
