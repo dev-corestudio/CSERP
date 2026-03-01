@@ -231,11 +231,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // STANOWISKA PRACY
     // =========================================================================
 
+    Route::get('workstations-my-list', [WorkstationController::class, 'forCurrentUser']);
+    Route::get('workers-list', [WorkstationController::class, 'workers']);
     Route::apiResource('workstations', WorkstationController::class);
     Route::post('workstations/{workstation}/operators', [WorkstationController::class, 'addOperator']);
     Route::delete('workstations/{workstation}/operators/{user}', [WorkstationController::class, 'removeOperator']);
 
-    Route::get('workstations/{workstation}/services', [WorkstationController::class, 'services']);
+    Route::get('workstations/{workstation}/services', [WorkstationController::class, 'getServices']);
     Route::post('workstations/{workstation}/services/{assortment}', [WorkstationController::class, 'attachService']);
     Route::delete('workstations/{workstation}/services/{assortment}', [WorkstationController::class, 'detachService']);
 
