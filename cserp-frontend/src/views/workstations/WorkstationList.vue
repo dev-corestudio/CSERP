@@ -42,6 +42,14 @@
             ></v-text-field>
             <v-spacer></v-spacer>
             <v-btn
+              variant="outlined"
+              prepend-icon="mdi-filter-remove"
+              class="mr-2"
+              @click="resetFilters"
+            >
+              Resetuj filtry
+            </v-btn>
+            <v-btn
               icon
               color="primary"
               @click="refreshList"
@@ -175,6 +183,14 @@ const headers = [
   { title: "Status", key: "status", align: "center" },
   { title: "Akcje", key: "actions", align: "end", sortable: false, width: "120px" },
 ];
+
+const resetFilters = () => {
+  search.value = "";
+};
+
+const resetFilters = () => {
+  search.value = "";
+};
 
 const refreshList = async () => {
   await workstationStore.fetchWorkstations();

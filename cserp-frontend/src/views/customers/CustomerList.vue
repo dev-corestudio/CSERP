@@ -66,9 +66,9 @@
             <v-btn
               variant="outlined"
               prepend-icon="mdi-filter-remove"
-              @click="clearFilters"
+              @click="resetFilters"
             >
-              Wyczyść filtry
+              Resetuj filtry
             </v-btn>
           </v-col>
         </v-row>
@@ -310,11 +310,12 @@ import PageHeader from "@/components/layout/PageHeader.vue";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog.vue";
 import customerService from "@/services/customerService";
 import { useServerTable } from "@/composables/useServerTable";
+import { usePersistedFilters } from "@/composables/usePersistedFilters";
 
 const router = useRouter();
 
-// Filtry (reaktywne → automatycznie przeładowują tabelę)
-const filters = ref({
+// Filtry (persystowane w localStorage)
+const filters = usePersistedFilters("customers:filters", {
   type: "all",
   is_active: "all", // "all" | "true" | "false"
 });
@@ -334,6 +335,7 @@ const {
   defaultSortBy: "name",
   defaultSortDir: "asc",
   extraFilters: filters,
+  persistKey: "customers",
 });
 
 // Dialog state
@@ -381,10 +383,9 @@ const getOrdersLabel = (count: number) => {
   return "zamówień";
 };
 
-const clearFilters = () => {
+const resetFilters = () => {
   search.value = "";
-  filters.value.type = "all";
-  filters.value.is_active = "all";
+  filters.value = { type: "all", is_active: "all" };
 };
 
 // Actions

@@ -49,7 +49,14 @@
             />
           </v-col>
 
-          <v-col cols="12" md="5" class="d-flex justify-end">
+          <v-col cols="12" md="5" class="d-flex align-center justify-end gap-2">
+            <v-btn
+              variant="outlined"
+              prepend-icon="mdi-filter-remove"
+              @click="resetFilters"
+            >
+              Resetuj filtry
+            </v-btn>
             <v-btn-toggle
               v-model="filters.quick_filter"
               variant="outlined"
@@ -212,6 +219,11 @@ const {
   extraFilters: filters,
   persistKey: "projects",
 });
+
+const resetFilters = () => {
+  search.value = "";
+  filters.value = { status: "all", quick_filter: "active" };
+};
 
 // Dialog state
 const projectDialog = ref(false);

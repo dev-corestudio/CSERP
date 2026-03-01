@@ -24,7 +24,7 @@
     <v-card elevation="2" class="mb-4">
       <v-card-text>
         <v-row align="center">
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="3">
             <v-text-field
               v-model="search"
               label="Szukaj po nazwie lub opisie"
@@ -36,7 +36,7 @@
             />
           </v-col>
 
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="2">
             <v-select
               v-model="filters.type"
               label="Typ"
@@ -75,6 +75,16 @@
               density="compact"
               @update:model-value="onInactiveToggle"
             />
+          </v-col>
+
+          <v-col cols="12" md="2" class="d-flex justify-end">
+            <v-btn
+              variant="outlined"
+              prepend-icon="mdi-filter-remove"
+              @click="resetFilters"
+            >
+              Resetuj filtry
+            </v-btn>
           </v-col>
         </v-row>
       </v-card-text>
@@ -288,6 +298,12 @@ watch(
 
 const onInactiveToggle = (val: boolean) => {
   filters.value.is_active = val ? null : true;
+};
+
+const resetFilters = () => {
+  search.value = "";
+  showInactive.value = false;
+  filters.value = { type: null, category: null, is_active: true };
 };
 
 // Helpers
