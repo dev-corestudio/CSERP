@@ -61,148 +61,16 @@
       </page-header>
 
       <v-row>
-        <!-- Lewa kolumna - dane klienta -->
-        <v-col cols="12" md="4">
-          <!-- Dane kontaktowe -->
-          <v-card elevation="2" class="mb-4">
-            <v-card-title class="bg-grey-lighten-4">
-              <v-icon class="mr-2">mdi-card-account-details</v-icon>
-              Dane kontaktowe
-            </v-card-title>
-            <v-card-text class="pa-4">
-              <v-list density="compact" class="bg-transparent">
-                <v-list-item v-if="customer.email">
-                  <template v-slot:prepend>
-                    <v-icon color="blue">mdi-email</v-icon>
-                  </template>
-                  <v-list-item-title>{{ customer.email }}</v-list-item-title>
-                  <v-list-item-subtitle>Email</v-list-item-subtitle>
-                </v-list-item>
-
-                <v-list-item v-if="customer.phone">
-                  <template v-slot:prepend>
-                    <v-icon color="green">mdi-phone</v-icon>
-                  </template>
-                  <v-list-item-title>{{ customer.phone }}</v-list-item-title>
-                  <v-list-item-subtitle>Telefon</v-list-item-subtitle>
-                </v-list-item>
-
-                <v-list-item v-if="customer.address">
-                  <template v-slot:prepend>
-                    <v-icon color="red">mdi-map-marker</v-icon>
-                  </template>
-                  <v-list-item-title>{{ customer.address }}</v-list-item-title>
-                  <v-list-item-subtitle>Adres</v-list-item-subtitle>
-                </v-list-item>
-
-                <v-list-item v-if="customer.nip">
-                  <template v-slot:prepend>
-                    <v-icon color="purple">mdi-identifier</v-icon>
-                  </template>
-                  <v-list-item-title>{{ customer.nip }}</v-list-item-title>
-                  <v-list-item-subtitle>NIP</v-list-item-subtitle>
-                </v-list-item>
-
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <v-icon color="teal">mdi-tag</v-icon>
-                  </template>
-                  <v-list-item-title>
-                    <v-chip
-                      size="small"
-                      :color="customer.type === 'B2B' ? 'blue' : 'purple'"
-                    >
-                      {{ customer.type === "B2B" ? "Firma (B2B)" : "Indywidualny (B2C)" }}
-                    </v-chip>
-                  </v-list-item-title>
-                  <v-list-item-subtitle>Typ klienta</v-list-item-subtitle>
-                </v-list-item>
-
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <v-icon color="grey">mdi-calendar</v-icon>
-                  </template>
-                  <v-list-item-title>{{
-                    formatDate(customer.created_at)
-                  }}</v-list-item-title>
-                  <v-list-item-subtitle>Data utworzenia</v-list-item-subtitle>
-                </v-list-item>
-              </v-list>
-            </v-card-text>
-          </v-card>
-
-          <!-- Statystyki -->
-          <v-card elevation="2">
-            <v-card-title class="bg-grey-lighten-4">
-              <v-icon class="mr-2">mdi-chart-bar</v-icon>
-              Statystyki
-            </v-card-title>
-            <v-card-text class="pa-4">
-              <v-row dense>
-                <v-col cols="6">
-                  <div class="text-center pa-3 rounded bg-blue-lighten-5">
-                    <div class="text-h4 font-weight-bold text-blue">
-                      {{ customer.stats?.total_projects || 0 }}
-                    </div>
-                    <div class="text-caption">Wszystkich projektów</div>
-                  </div>
-                </v-col>
-                <v-col cols="6">
-                  <div class="text-center pa-3 rounded bg-orange-lighten-5">
-                    <div class="text-h4 font-weight-bold text-orange">
-                      {{ customer.stats?.active_projects || 0 }}
-                    </div>
-                    <div class="text-caption">Aktywnych</div>
-                  </div>
-                </v-col>
-                <v-col cols="6">
-                  <div class="text-center pa-3 rounded bg-green-lighten-5">
-                    <div class="text-h4 font-weight-bold text-green">
-                      {{ customer.stats?.completed_projects || 0 }}
-                    </div>
-                    <div class="text-caption">Zakończonych</div>
-                  </div>
-                </v-col>
-                <v-col cols="6">
-                  <div class="text-center pa-3 rounded bg-red-lighten-5">
-                    <div class="text-h4 font-weight-bold text-red">
-                      {{ customer.stats?.cancelled_projects || 0 }}
-                    </div>
-                    <div class="text-caption">Anulowanych</div>
-                  </div>
-                </v-col>
-              </v-row>
-
-              <v-divider class="my-4" />
-
-              <!-- Status płatności -->
-              <div class="text-subtitle-2 mb-2">Status płatności</div>
-              <div class="d-flex justify-space-between mb-1">
-                <span class="text-body-2">Opłacone:</span>
-                <v-chip size="x-small" color="success">{{
-                  customer.stats?.paid_projects || 0
-                }}</v-chip>
-              </div>
-              <div class="d-flex justify-space-between">
-                <span class="text-body-2">Nieopłacone:</span>
-                <v-chip size="x-small" color="warning">{{
-                  customer.stats?.unpaid_projects || 0
-                }}</v-chip>
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-
-        <!-- Prawa kolumna - projekty -->
+        <!-- Lewa kolumna - projekty -->
         <v-col cols="12" md="8">
-          <v-card elevation="2">
-            <v-card-title class="bg-grey-lighten-4 d-flex align-center">
-              <v-icon class="mr-2">mdi-clipboard-list</v-icon>
-              Ostatnie projekty
+          <v-card class="bg-white border" elevation="1">
+            <v-card-title class="d-flex align-center pb-2">
+              <v-icon start size="small" color="primary">mdi-clipboard-list</v-icon>
+              Projekty
               <v-spacer />
               <v-btn
                 color="primary"
-                variant="elevated"
+                variant="flat"
                 size="small"
                 prepend-icon="mdi-plus"
                 @click="openProjectDialog"
@@ -210,6 +78,7 @@
                 Nowy projekt
               </v-btn>
             </v-card-title>
+            <v-divider class="mb-2 mx-4" />
 
             <v-card-text class="pa-0">
               <v-data-table
@@ -217,24 +86,19 @@
                 :items="customer.projects || []"
                 :items-per-page="10"
                 hover
-                class="orders-table"
+                class="projects-table"
                 @click:row="viewProject"
               >
-                <!-- Numer projektu (Pełny) -->
                 <template v-slot:item.full_project_number="{ item }">
-                  <span class="font-weight-bold text-primary">{{
-                    item.full_project_number
-                  }}</span>
+                  <span class="font-weight-bold text-primary">{{ item.full_project_number }}</span>
                 </template>
 
-                <!-- Opis (zamiast Brief) -->
                 <template v-slot:item.description="{ item }">
                   <div class="text-truncate" style="max-width: 300px">
                     {{ item.description || "-" }}
                   </div>
                 </template>
 
-                <!-- Status -->
                 <template v-slot:item.overall_status="{ item }">
                   <v-chip
                     size="small"
@@ -245,7 +109,6 @@
                   </v-chip>
                 </template>
 
-                <!-- Płatność -->
                 <template v-slot:item.payment_status="{ item }">
                   <v-chip
                     size="small"
@@ -256,12 +119,10 @@
                   </v-chip>
                 </template>
 
-                <!-- Data -->
                 <template v-slot:item.created_at="{ item }">
                   {{ formatDate(item.created_at) }}
                 </template>
 
-                <!-- Brak projektów -->
                 <template v-slot:no-data>
                   <div class="text-center py-8">
                     <v-icon size="64" color="grey">mdi-clipboard-text-off</v-icon>
@@ -279,6 +140,121 @@
               </v-data-table>
             </v-card-text>
           </v-card>
+        </v-col>
+
+        <!-- Prawa kolumna - sidebar -->
+        <v-col cols="12" md="4">
+          <div class="sticky-sidebar">
+            <!-- Dane kontaktowe -->
+            <v-card class="mb-4 bg-white border" elevation="1">
+              <v-card-title class="d-flex align-center pb-2">
+                <v-icon start size="small" color="primary">mdi-card-account-details</v-icon>
+                Dane klienta
+              </v-card-title>
+              <v-divider class="mb-2 mx-4" />
+
+              <v-card-text class="pa-4 pt-0">
+                <div class="detail-row">
+                  <div class="label">Typ</div>
+                  <div class="value">
+                    <v-chip
+                      size="small"
+                      :color="customer.type === 'B2B' ? 'blue' : 'purple'"
+                      variant="tonal"
+                    >
+                      {{ customer.type === "B2B" ? "Firma (B2B)" : "Indywidualny (B2C)" }}
+                    </v-chip>
+                  </div>
+                </div>
+
+                <div v-if="customer.nip" class="detail-row">
+                  <div class="label">NIP</div>
+                  <div class="value font-weight-bold">{{ customer.nip }}</div>
+                </div>
+
+                <div v-if="customer.email" class="detail-row">
+                  <div class="label">Email</div>
+                  <div class="value">
+                    <a :href="`mailto:${customer.email}`" class="text-decoration-none text-primary">
+                      {{ customer.email }}
+                    </a>
+                  </div>
+                </div>
+
+                <div v-if="customer.phone" class="detail-row">
+                  <div class="label">Telefon</div>
+                  <div class="value font-weight-bold">{{ customer.phone }}</div>
+                </div>
+
+                <div v-if="customer.address" class="detail-row">
+                  <div class="label">Adres</div>
+                  <div class="value text-right" style="max-width: 180px">{{ customer.address }}</div>
+                </div>
+
+                <div class="detail-row">
+                  <div class="label">Data utworzenia</div>
+                  <div class="value text-medium-emphasis">{{ formatDate(customer.created_at) }}</div>
+                </div>
+              </v-card-text>
+            </v-card>
+
+            <!-- Statystyki -->
+            <v-card class="bg-white border" elevation="1">
+              <v-card-title class="d-flex align-center pb-2">
+                <v-icon start size="small" color="primary">mdi-chart-bar</v-icon>
+                Statystyki projektów
+              </v-card-title>
+              <v-divider class="mb-2 mx-4" />
+
+              <v-card-text class="pa-4 pt-2">
+                <v-row dense>
+                  <v-col cols="6">
+                    <div class="stat-box bg-blue-lighten-5">
+                      <div class="stat-value text-blue">{{ customer.stats?.total_projects || 0 }}</div>
+                      <div class="stat-label">Wszystkich</div>
+                    </div>
+                  </v-col>
+                  <v-col cols="6">
+                    <div class="stat-box bg-orange-lighten-5">
+                      <div class="stat-value text-orange">{{ customer.stats?.active_projects || 0 }}</div>
+                      <div class="stat-label">Aktywnych</div>
+                    </div>
+                  </v-col>
+                  <v-col cols="6">
+                    <div class="stat-box bg-green-lighten-5">
+                      <div class="stat-value text-green">{{ customer.stats?.completed_projects || 0 }}</div>
+                      <div class="stat-label">Zakończonych</div>
+                    </div>
+                  </v-col>
+                  <v-col cols="6">
+                    <div class="stat-box bg-red-lighten-5">
+                      <div class="stat-value text-red">{{ customer.stats?.cancelled_projects || 0 }}</div>
+                      <div class="stat-label">Anulowanych</div>
+                    </div>
+                  </v-col>
+                </v-row>
+
+                <v-divider class="my-3" />
+
+                <div class="detail-row">
+                  <div class="label">Opłacone</div>
+                  <div class="value">
+                    <v-chip size="x-small" color="success" variant="tonal">
+                      {{ customer.stats?.paid_projects || 0 }}
+                    </v-chip>
+                  </div>
+                </div>
+                <div class="detail-row">
+                  <div class="label">Nieopłacone</div>
+                  <div class="value">
+                    <v-chip size="x-small" color="warning" variant="tonal">
+                      {{ customer.stats?.unpaid_projects || 0 }}
+                    </v-chip>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </div>
         </v-col>
       </v-row>
     </template>
@@ -360,7 +336,6 @@ const fetchCustomer = async () => {
   }
 };
 
-// Customer dialog handlers
 const openEditDialog = () => {
   editDialog.value = true;
 };
@@ -384,23 +359,19 @@ const toggleActive = async () => {
   }
 };
 
-// Project dialog handlers
 const openProjectDialog = () => {
   projectDialog.value = true;
 };
 
 const handleProjectSaved = async () => {
-  // Odśwież dane klienta (w tym listę projektów)
   await fetchCustomer();
   showSnackbar("Projekt utworzony pomyślnie", "success");
 };
 
-// Navigation
 const viewProject = (event, { item }) => {
   router.push(`/projects/${item.id}`);
 };
 
-// Helpers
 const formatDate = (date) => {
   if (!date) return "-";
   return new Date(date).toLocaleDateString("pl-PL");
@@ -456,21 +427,78 @@ const showSnackbar = (message, color = "success") => {
   snackbar.value = { show: true, message, color };
 };
 
-// Lifecycle
 onMounted(() => {
   fetchCustomer();
 });
 </script>
 
 <style scoped>
-.orders-table :deep(tbody tr) {
+.sticky-sidebar {
+  position: sticky;
+  top: 80px;
+  z-index: 1;
+}
+
+.projects-table :deep(tbody tr) {
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f5f5f5;
+  min-height: 32px;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.detail-row .label {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.detail-row .value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: right;
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  word-break: break-word;
+}
+
+.stat-box {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 4px;
 }
 </style>
