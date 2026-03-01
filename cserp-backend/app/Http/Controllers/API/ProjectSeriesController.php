@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Variant;
 use App\Services\SeriesService;
+use App\Enums\ProjectPriority;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 /**
  * ProjectSeriesController — zarządzanie seriami projektów
@@ -98,7 +100,7 @@ class ProjectSeriesController extends Controller
         $validated = $request->validate([
             'description' => 'nullable|string|max:1000',
             'planned_delivery_date' => 'nullable|date',
-            'priority' => 'nullable|string|in:low,normal,high,urgent',
+            'priority' => ['nullable', Rule::enum(ProjectPriority::class)],
 
             // Opcjonalne — tylko gdy kopiujemy z innej serii
             'copy_from_project_id' => 'nullable|integer|exists:projects,id',
