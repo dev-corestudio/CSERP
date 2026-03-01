@@ -50,13 +50,13 @@
           </v-col>
 
           <v-col cols="12" md="5" class="d-flex align-center justify-end gap-2">
-            <v-btn
-              variant="outlined"
-              prepend-icon="mdi-filter-remove"
-              @click="resetFilters"
-            >
-              Resetuj filtry
-            </v-btn>
+            <v-tooltip text="Resetuj filtry" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                  <v-icon>mdi-filter-remove</v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
             <v-btn-toggle
               v-model="filters.quick_filter"
               variant="outlined"

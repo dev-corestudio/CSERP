@@ -78,13 +78,13 @@
           </v-col>
 
           <v-col cols="12" md="2" class="d-flex justify-end">
-            <v-btn
-              variant="outlined"
-              prepend-icon="mdi-filter-remove"
-              @click="resetFilters"
-            >
-              Resetuj filtry
-            </v-btn>
+            <v-tooltip text="Resetuj filtry" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                  <v-icon>mdi-filter-remove</v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
           </v-col>
         </v-row>
       </v-card-text>

@@ -105,15 +105,14 @@
           </v-col>
 
           <!-- Reset -->
-          <v-col cols="12" md="6" class="d-flex justify-end align-center">
-            <v-btn
-              variant="text"
-              prepend-icon="mdi-refresh"
-              @click="resetFilters"
-              color="primary"
-            >
-              Resetuj filtry
-            </v-btn>
+          <v-col cols="12" md="6" class="d-flex justify-end align-center gap-1">
+            <v-tooltip text="Resetuj filtry" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                  <v-icon>mdi-filter-remove</v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
           </v-col>
         </v-row>
       </v-card-text>
