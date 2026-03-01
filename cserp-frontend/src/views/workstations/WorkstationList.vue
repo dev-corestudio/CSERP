@@ -19,7 +19,45 @@
       </template>
     </page-header>
 
-    <v-card elevation="2" class="mt-4">
+    <!-- Filtry -->
+    <v-card elevation="2" class="mb-4">
+      <v-card-text>
+        <v-row align="center">
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="search"
+              prepend-inner-icon="mdi-magnify"
+              label="Szukaj (nazwa, lokalizacja, pracownik)..."
+              hide-details
+              density="compact"
+              variant="outlined"
+              clearable
+            />
+          </v-col>
+
+          <v-col cols="12" md="6" class="d-flex justify-end gap-2">
+            <v-btn
+              variant="outlined"
+              prepend-icon="mdi-filter-remove"
+              @click="resetFilters"
+            >
+              Resetuj filtry
+            </v-btn>
+            <v-btn
+              variant="outlined"
+              prepend-icon="mdi-refresh"
+              :loading="workstationStore.loading"
+              @click="refreshList"
+            >
+              Odśwież
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <!-- Tabela -->
+    <v-card elevation="2">
       <v-data-table
         :headers="headers"
         :items="workstationStore.items"
@@ -28,39 +66,6 @@
         :custom-filter="customFilter"
         hover
       >
-        <template v-slot:top>
-          <v-toolbar flat density="compact" color="transparent" class="px-4 py-2">
-            <v-text-field
-              v-model="search"
-              prepend-inner-icon="mdi-magnify"
-              label="Szukaj (nazwa, lokalizacja, pracownik)..."
-              single-line
-              hide-details
-              density="compact"
-              variant="outlined"
-              style="max-width: 400px"
-            ></v-text-field>
-            <v-spacer></v-spacer>
-            <v-btn
-              variant="outlined"
-              prepend-icon="mdi-filter-remove"
-              class="mr-2"
-              @click="resetFilters"
-            >
-              Resetuj filtry
-            </v-btn>
-            <v-btn
-              icon
-              color="primary"
-              @click="refreshList"
-              :loading="workstationStore.loading"
-            >
-              <v-icon>mdi-refresh</v-icon>
-            </v-btn>
-          </v-toolbar>
-        </template>
-
-        <!-- Typ -->
         <template v-slot:item.type="{ item }">
           <v-chip
             size="small"
