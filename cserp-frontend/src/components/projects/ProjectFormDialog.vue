@@ -315,7 +315,7 @@ const defaultForm = () => ({
   assigned_to: null as number | null,
   description: "",
   planned_delivery_date: "",
-  priority: "normal",
+  priority: "NORMAL",
 });
 
 const form = ref(defaultForm());
@@ -323,10 +323,10 @@ const form = ref(defaultForm());
 // ─── Opcje ────────────────────────────────────────────────────────────────────
 
 const priorityOptions = [
-  { title: "Niski", value: "low" },
-  { title: "Normalny", value: "normal" },
-  { title: "Wysoki", value: "high" },
-  { title: "Pilny", value: "urgent" },
+  { title: "Niski", value: "LOW" },
+  { title: "Normalny", value: "NORMAL" },
+  { title: "Wysoki", value: "HIGH" },
+  { title: "Pilny", value: "URGENT" },
 ];
 
 const rules = {
@@ -486,7 +486,7 @@ watch(
         assigned_to: newVal.assigned_to || null,
         description: newVal.description || "",
         planned_delivery_date: newVal.planned_delivery_date || "",
-        priority: newVal.priority || "normal",
+        priority: newVal.priority || "NORMAL",
       };
     } else {
       form.value = defaultForm();

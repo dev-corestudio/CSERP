@@ -64,19 +64,19 @@ export const PAYMENT_STATUSES: StatusMap = {
 }
 
 export const ORDER_PRIORITIES: StatusMap = {
-    low: {
+    LOW: {
         color: 'grey',
         icon: 'mdi-flag-outline'
     },
-    normal: {
+    NORMAL: {
         color: 'blue',
         icon: 'mdi-flag'
     },
-    high: {
+    HIGH: {
         color: 'orange',
         icon: 'mdi-flag'
     },
-    urgent: {
+    URGENT: {
         color: 'red',
         icon: 'mdi-fire'
     }

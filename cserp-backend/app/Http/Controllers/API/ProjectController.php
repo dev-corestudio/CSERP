@@ -249,7 +249,7 @@ class ProjectController extends Controller
                 'assigned_to'           => 'sometimes|nullable|exists:users,id',
                 'description'           => 'sometimes|string',
                 'planned_delivery_date' => 'sometimes|date',
-                'priority'              => 'sometimes|string|in:low,normal,high,urgent,LOW,NORMAL,HIGH,URGENT',
+                'priority'              => ['sometimes', Rule::enum(ProjectPriority::class)],
                 'overall_status'        => 'sometimes|string',
             ]);
 
