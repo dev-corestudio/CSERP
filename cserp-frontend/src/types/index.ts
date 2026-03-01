@@ -24,11 +24,11 @@ export interface Customer {
     };
 }
 
-export interface Order {
+export interface Project {
     id: number;
-    order_number: string;
+    project_number: string;
     series: string;
-    full_order_number: string;
+    full_project_number: string;
     customer_id: number;
     customer?: Customer;
     description: string;
@@ -47,7 +47,7 @@ export interface Order {
 // ZMIANY W VARIANT:
 export interface Variant {
     id: number;
-    order_id: number;
+    project_id: number;
     variant_number: string;
     name: string;
     description?: string; // NOWE

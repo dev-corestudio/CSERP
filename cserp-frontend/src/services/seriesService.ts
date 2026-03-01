@@ -7,8 +7,8 @@ import api from './api'
 /** Pojedyncza seria na liście */
 export interface SeriesListItem {
     id: number
-    full_order_number: string
-    order_number: string
+    full_project_number: string
+    project_number: string
     series: string
     description: string | null
     overall_status: string
@@ -54,7 +54,7 @@ export interface CreateSeriesPayload {
     description?: string
     planned_delivery_date?: string | null
     priority?: string
-    copy_from_order_id?: number | null
+    copy_from_project_id?: number | null
     variants?: VariantCopyConfig[]
 }
 
@@ -63,8 +63,8 @@ export interface CreateSeriesResponse {
     message: string
     data: any
     summary: {
-        new_order_id: number
-        new_full_order_number: string
+        new_project_id: number
+        new_full_project_number: string
         variants_created: number
         copied_from: string | null
         copy_details: {
@@ -83,7 +83,7 @@ export const seriesService = {
      * Używa ID dowolnej serii z tej grupy
      */
     async getAllSeries(orderId: number | string): Promise<SeriesListItem[]> {
-        const response = await api.get(`/orders/${orderId}/series`)
+        const response = await api.get(`/projects/${orderId}/series`)
         const data = response.data
         if (Array.isArray(data)) return data
         return (data as any).data || []
@@ -93,7 +93,7 @@ export const seriesService = {
      * Pobierz warianty z danej serii do selektora kopiowania
      */
     async getVariantsForSelector(orderId: number | string): Promise<VariantForCopy[]> {
-        const response = await api.get(`/orders/${orderId}/series/variants`)
+        const response = await api.get(`/projects/${orderId}/series/variants`)
         const data = response.data
         if (Array.isArray(data)) return data
         return (data as any).data || []
@@ -106,7 +106,7 @@ export const seriesService = {
         orderId: number | string,
         payload: CreateSeriesPayload
     ): Promise<CreateSeriesResponse> {
-        const response = await api.post(`/orders/${orderId}/series/create`, payload)
+        const response = await api.post(`/projects/${orderId}/series/create`, payload)
         return response.data
     }
 }

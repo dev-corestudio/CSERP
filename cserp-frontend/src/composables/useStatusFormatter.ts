@@ -18,10 +18,10 @@ export function useStatusFormatter() {
     }
 
     return {
-        // Zamówienia
-        formatOrderStatus: (status: string) => format('orderStatuses', status),
+        // Projekty
+        formatProjectStatus: (status: string) => format('projectStatuses', status),
         formatPaymentStatus: (status: string) => format('paymentStatuses', status),
-        formatPriority: (priority: string) => format('orderPriorities', priority),
+        formatPriority: (priority: string) => format('projectPriorities', priority),
 
         // WARIANTY (NOWE)
         formatVariantStatus: (status: string) => format('variantStatuses', status),

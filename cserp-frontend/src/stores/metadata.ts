@@ -33,9 +33,9 @@ interface MetadataState {
     customerTypes: MetadataItem[];
     assortmentTypes: MetadataItem[];
     units: any[];
-    orderStatuses: MetadataItem[];
+    projectStatuses: MetadataItem[];
     paymentStatuses: MetadataItem[];
-    orderPriorities: MetadataItem[];
+    projectPriorities: MetadataItem[];
     workstationTypes: MetadataItem[];
     workstationStatuses: MetadataItem[];
     productionStatuses: MetadataItem[];
@@ -61,9 +61,9 @@ export const useMetadataStore = defineStore('metadata', {
         customerTypes: [],
         assortmentTypes: [],
         units: [],
-        orderStatuses: [],
+        projectStatuses: [],
         paymentStatuses: [],
-        orderPriorities: [],
+        projectPriorities: [],
         workstationTypes: [],
         workstationStatuses: [],
         productionStatuses: [],
@@ -105,9 +105,9 @@ export const useMetadataStore = defineStore('metadata', {
                 this.assortmentTypes = merge(data.assortment_types || [], ASSORTMENT_TYPES)
                 this.units = data.units || []
 
-                this.orderStatuses = merge(data.order_statuses || [], ORDER_STATUSES)
+                this.projectStatuses = merge(data.project_statuses || [], ORDER_STATUSES)
                 this.paymentStatuses = merge(data.payment_statuses || [], PAYMENT_STATUSES)
-                this.orderPriorities = merge(data.order_priorities || [], ORDER_PRIORITIES)
+                this.projectPriorities = merge(data.project_priorities || [], ORDER_PRIORITIES)
 
                 this.workstationTypes = merge(data.workstation_types || [], WORKSTATION_TYPES)
                 this.workstationStatuses = merge(data.workstation_statuses || [], WORKSTATION_STATUSES)

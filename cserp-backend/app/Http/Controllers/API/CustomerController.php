@@ -50,8 +50,8 @@ class CustomerController extends Controller
                 });
             }
 
-            // Dołącz statystyki zamówień
-            $query->withCount('orders');
+            // Dołącz statystyki projektów
+            $query->withCount('projects');
 
             // Sortowanie z whitelistą
             $this->applySorting($query, $request, [
@@ -59,7 +59,7 @@ class CustomerController extends Controller
                 'email',
                 'type',
                 'created_at',
-                'orders_count',
+                'projects_count',
             ], 'name', 'asc');
 
             // Paginacja
@@ -140,13 +140,13 @@ class CustomerController extends Controller
     public function show(Customer $customer): JsonResponse
     {
         try {
-            // ── 1 query: załaduj WSZYSTKIE zamówienia (lekkie kolumny) ──
+            // ── 1 query: załaduj WSZYSTKIE projekty (lekkie kolumny) ──
             $customer->load([
-                'orders' => function ($query) {
+                'projects' => function ($query) {
                     $query->select(
                         'id',
                         'customer_id',
-                        'order_number',
+                        'project_number',
                         'series',
                         'description',
                         'overall_status',
@@ -157,21 +157,21 @@ class CustomerController extends Controller
             ]);
 
             // ── 0 query: oblicz statystyki z załadowanej kolekcji ──
-            $allOrders = $customer->orders;
+            $allProjects = $customer->projects;
 
             $stats = [
-                'total_orders' => $allOrders->count(),
-                'active_orders' => $allOrders->whereNotIn('overall_status', ['completed', 'cancelled'])->count(),
-                'completed_orders' => $allOrders->where('overall_status', 'completed')->count(),
-                'cancelled_orders' => $allOrders->where('overall_status', 'cancelled')->count(),
-                'paid_orders' => $allOrders->where('payment_status', 'paid')->count(),
-                'unpaid_orders' => $allOrders->whereIn('payment_status', ['unpaid', 'partial'])->count(),
+                'total_orders' => $allProjects->count(),
+                'active_orders' => $allProjects->whereNotIn('overall_status', ['completed', 'cancelled'])->count(),
+                'completed_orders' => $allProjects->where('overall_status', 'completed')->count(),
+                'cancelled_orders' => $allProjects->where('overall_status', 'cancelled')->count(),
+                'paid_orders' => $allProjects->where('payment_status', 'paid')->count(),
+                'unpaid_orders' => $allProjects->whereIn('payment_status', ['unpaid', 'partial'])->count(),
             ];
 
             $customer->stats = $stats;
 
             // ── Podmień relację na ostatnie 20 (frontend nie potrzebuje setek) ──
-            $customer->setRelation('orders', $allOrders->take(20)->values());
+            $customer->setRelation('projects', $allProjects->take(20)->values());
 
             return response()->json([
                 'data' => $customer,
@@ -233,10 +233,10 @@ class CustomerController extends Controller
     public function destroy(Customer $customer): JsonResponse
     {
         try {
-            // Sprawdź czy klient ma zamówienia
-            if ($customer->orders()->exists()) {
+            // Sprawdź czy klient ma projekty
+            if ($customer->projects()->exists()) {
                 return response()->json([
-                    'message' => 'Nie można usunąć klienta z przypisanymi zamówieniami. Dezaktywuj klienta zamiast usuwać.'
+                    'message' => 'Nie można usunąć klienta z przypisanymi projektami. Dezaktywuj klienta zamiast usuwać.'
                 ], 422);
             }
 
@@ -291,7 +291,7 @@ class CustomerController extends Controller
     public function statistics(Customer $customer): JsonResponse
     {
         try {
-            $row = DB::table('orders')
+            $row = DB::table('projects')
                 ->where('customer_id', $customer->id)
                 ->selectRaw('
                     COUNT(*) as total_orders,

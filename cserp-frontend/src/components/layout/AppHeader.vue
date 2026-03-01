@@ -104,7 +104,7 @@ const menuItems = computed(() => {
   // Używamy gettera logiki biznesowej, a nie sprawdzania stringów
   if (authStore.canManageSystem) {
     items.push(
-      { title: "Zamówienia", icon: "mdi-file-document-outline", to: "/orders" },
+      { title: "Projekty", icon: "mdi-clipboard-text", to: "/projects" },
       { title: "Klienci", icon: "mdi-account-group", to: "/customers" },
       { title: "Asortyment", icon: "mdi-package-variant-closed", to: "/assortment" },
       { title: "Stanowiska", icon: "mdi-robot", to: "/workstations" },

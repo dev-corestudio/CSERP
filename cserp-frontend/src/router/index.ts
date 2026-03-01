@@ -53,36 +53,36 @@ const routes: Array<RouteRecordRaw> = [
   },
 
   // ============================================================================
-  // ZAMÓWIENIA (tylko dla zarządzających)
+  // PROJEKTY (tylko dla zarządzających)
   // ============================================================================
   {
-    path: '/orders',
-    name: 'OrderList',
-    component: () => import('@/views/orders/OrderList.vue'),
+    path: '/projects',
+    name: 'ProjectList',
+    component: () => import('@/views/projects/ProjectList.vue'),
     meta: {
       requiresAuth: true,
       requiresManager: true, // Flaga: wymaga uprawnień zarządczych
-      title: 'Zamówienia'
+      title: 'Projekty'
     }
   },
   {
-    path: '/orders/:id',
-    name: 'OrderDetail',
-    component: () => import('@/views/orders/OrderDetail.vue'),
+    path: '/projects/:id',
+    name: 'ProjectDetail',
+    component: () => import('@/views/projects/ProjectDetail.vue'),
     meta: {
       requiresAuth: true,
       requiresManager: true,
-      title: 'Szczegóły zamówienia'
+      title: 'Szczegóły projektu'
     }
   },
   {
-    path: '/orders/:orderId/variants/:id',
+    path: '/projects/:projectId/variants/:id',
     name: 'VariantDetail',
-    component: () => import('@/views/orders/VariantDetail.vue'),
+    component: () => import('@/views/projects/VariantDetail.vue'),
     meta: {
       requiresAuth: true,
       requiresManager: true,
-      title: 'Szczegóły Wariantu Produktowej'
+      title: 'Szczegóły Wariantu'
     }
   },
 

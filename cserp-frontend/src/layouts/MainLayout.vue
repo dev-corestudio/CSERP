@@ -84,7 +84,7 @@ const mobileNavItems = computed(() => {
 
   if (authStore.canManageSystem) {
     items.push(
-      { title: "Zamówienia", icon: "mdi-clipboard-text", to: "/orders" },
+      { title: "Projekty", icon: "mdi-clipboard-text", to: "/projects" },
       { title: "Klienci", icon: "mdi-account-group", to: "/customers" },
       { title: "Asortyment", icon: "mdi-package-variant-closed", to: "/assortment" },
       { title: "Stanowiska", icon: "mdi-factory", to: "/workstations" }

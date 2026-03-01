@@ -11,7 +11,7 @@ export const variantService = {
    * Backend zwraca płaską listę — grupy mają is_group=true, quantity=0.
    */
   async getAll(orderId: number | string): Promise<Variant[]> {
-    const response = await api.get(`/orders/${orderId}/variants`)
+    const response = await api.get(`/projects/${orderId}/variants`)
     const data = response.data
     if (Array.isArray(data)) return data
     return (data as any).data || []
@@ -37,7 +37,7 @@ export const variantService = {
    * Payload: { name, description? }
    */
   async createGroup(orderId: number | string, data: { name: string; description?: string }): Promise<Variant> {
-    const response = await api.post(`/orders/${orderId}/variants`, data)
+    const response = await api.post(`/projects/${orderId}/variants`, data)
     const resData = response.data
     return (resData as any).data || resData
   },
@@ -58,7 +58,7 @@ export const variantService = {
       description?: string
     }
   ): Promise<Variant> {
-    const response = await api.post(`/orders/${orderId}/variants/${parentId}/children`, data)
+    const response = await api.post(`/projects/${orderId}/variants/${parentId}/children`, data)
     const resData = response.data
     return (resData as any).data || resData
   },

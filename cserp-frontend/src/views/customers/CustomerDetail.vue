@@ -144,7 +144,7 @@
                     <div class="text-h4 font-weight-bold text-blue">
                       {{ customer.stats?.total_orders || 0 }}
                     </div>
-                    <div class="text-caption">Wszystkich zamówień</div>
+                    <div class="text-caption">Wszystkich projektów</div>
                   </div>
                 </v-col>
                 <v-col cols="6">
@@ -193,37 +193,37 @@
           </v-card>
         </v-col>
 
-        <!-- Prawa kolumna - zamówienia -->
+        <!-- Prawa kolumna - projekty -->
         <v-col cols="12" md="8">
           <v-card elevation="2">
             <v-card-title class="bg-grey-lighten-4 d-flex align-center">
               <v-icon class="mr-2">mdi-clipboard-list</v-icon>
-              Ostatnie zamówienia
+              Ostatnie projekty
               <v-spacer />
               <v-btn
                 color="primary"
                 variant="elevated"
                 size="small"
                 prepend-icon="mdi-plus"
-                @click="openOrderDialog"
+                @click="openProjectDialog"
               >
-                Nowe zamówienie
+                Nowy projekt
               </v-btn>
             </v-card-title>
 
             <v-card-text class="pa-0">
               <v-data-table
-                :headers="ordersHeaders"
-                :items="customer.orders || []"
+                :headers="projectsHeaders"
+                :items="customer.projects || []"
                 :items-per-page="10"
                 hover
                 class="orders-table"
-                @click:row="viewOrder"
+                @click:row="viewProject"
               >
-                <!-- Numer zamówienia (Pełny) -->
-                <template v-slot:item.full_order_number="{ item }">
+                <!-- Numer projektu (Pełny) -->
+                <template v-slot:item.full_project_number="{ item }">
                   <span class="font-weight-bold text-primary">{{
-                    item.full_order_number
+                    item.full_project_number
                   }}</span>
                 </template>
 
@@ -261,18 +261,18 @@
                   {{ formatDate(item.created_at) }}
                 </template>
 
-                <!-- Brak zamówień -->
+                <!-- Brak projektów -->
                 <template v-slot:no-data>
                   <div class="text-center py-8">
                     <v-icon size="64" color="grey">mdi-clipboard-text-off</v-icon>
-                    <div class="text-h6 mt-4 text-medium-emphasis">Brak zamówień</div>
+                    <div class="text-h6 mt-4 text-medium-emphasis">Brak projektów</div>
                     <v-btn
                       color="primary"
                       variant="outlined"
                       class="mt-4"
-                      @click="openOrderDialog"
+                      @click="openProjectDialog"
                     >
-                      Utwórz pierwsze zamówienie
+                      Utwórz pierwszy projekt
                     </v-btn>
                   </div>
                 </template>
@@ -290,12 +290,12 @@
       @saved="handleCustomerSaved"
     />
 
-    <!-- Dialog nowego zamówienia -->
-    <order-form-dialog
-      v-model="orderDialog"
-      :order="null"
+    <!-- Dialog nowego projektu -->
+    <project-form-dialog
+      v-model="projectDialog"
+      :project="null"
       :preselected-customer-id="customer?.id"
-      @saved="handleOrderSaved"
+      @saved="handleProjectSaved"
     />
 
     <!-- Snackbar -->
@@ -313,7 +313,7 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog.vue";
-import OrderFormDialog from "@/components/orders/OrderFormDialog.vue";
+import ProjectFormDialog from "@/components/projects/ProjectFormDialog.vue";
 import customerService from "@/services/customerService";
 
 const route = useRoute();
@@ -326,7 +326,7 @@ const customer = ref(null);
 
 // Dialog states
 const editDialog = ref(false);
-const orderDialog = ref(false);
+const projectDialog = ref(false);
 
 // Snackbar
 const snackbar = ref({
@@ -335,9 +335,9 @@ const snackbar = ref({
   color: "success",
 });
 
-// Orders table headers (Zaktualizowane)
-const ordersHeaders = [
-  { title: "Numer", key: "full_order_number", width: "160px" },
+// Projects table headers
+const projectsHeaders = [
+  { title: "Numer", key: "full_project_number", width: "160px" },
   { title: "Opis", key: "description" },
   { title: "Status", key: "overall_status", align: "center", width: "130px" },
   { title: "Płatność", key: "payment_status", align: "center", width: "120px" },
@@ -384,20 +384,20 @@ const toggleActive = async () => {
   }
 };
 
-// Order dialog handlers
-const openOrderDialog = () => {
-  orderDialog.value = true;
+// Project dialog handlers
+const openProjectDialog = () => {
+  projectDialog.value = true;
 };
 
-const handleOrderSaved = async () => {
-  // Odśwież dane klienta (w tym listę zamówień)
+const handleProjectSaved = async () => {
+  // Odśwież dane klienta (w tym listę projektów)
   await fetchCustomer();
-  showSnackbar("Zamówienie utworzone pomyślnie", "success");
+  showSnackbar("Projekt utworzony pomyślnie", "success");
 };
 
 // Navigation
-const viewOrder = (event, { item }) => {
-  router.push(`/orders/${item.id}`);
+const viewProject = (event, { item }) => {
+  router.push(`/projects/${item.id}`);
 };
 
 // Helpers
