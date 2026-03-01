@@ -149,7 +149,6 @@
       <series-list-panel
         v-if="seriesDialog"
         ref="seriesPanelRef"
-        mode="project"
         :current-id="project?.id"
         :entity-number="project?.project_number"
         :closable="true"

@@ -9,7 +9,7 @@ export const useVariantsStore = defineStore('variants', () => {
   // STATE
   // =========================================================================
 
-  /** Płaska lista wszystkich elementów (grupy + warianty) dla zamówienia */
+  /** Płaska lista wszystkich elementów (grupy + warianty) dla projektu */
   const variants = ref<Variant[]>([])
   const currentVariant = ref<Variant | null>(null)
   const { loading, error, wrapAction } = useSharedApiState()
@@ -38,9 +38,9 @@ export const useVariantsStore = defineStore('variants', () => {
   // POBIERANIE
   // =========================================================================
 
-  /** Pobierz wszystkie elementy (grupy + warianty) dla zamówienia */
-  const fetchVariants = wrapAction(async (orderId: number | string) => {
-    variants.value = await variantService.getAll(orderId)
+  /** Pobierz wszystkie elementy (grupy + warianty) dla projektu */
+  const fetchVariants = wrapAction(async (projectId: number | string) => {
+    variants.value = await variantService.getAll(projectId)
   }, 'Błąd pobierania wariantów')
 
   /** Pobierz szczegóły pojedynczego elementu (grupy lub wariantu) */
@@ -55,14 +55,14 @@ export const useVariantsStore = defineStore('variants', () => {
   // =========================================================================
 
   /**
-   * Utwórz nową GRUPĘ dla zamówienia.
+   * Utwórz nową GRUPĘ dla projektu.
    * Backend automatycznie nadaje kolejną literę (A, B, C...) i ustawia quantity=0.
    */
   const createGroup = wrapAction(async (
-    orderId: number | string,
+    projectId: number | string,
     data: { name: string; description?: string }
   ) => {
-    const newGroup = await variantService.createGroup(orderId, data)
+    const newGroup = await variantService.createGroup(projectId, data)
     variants.value.push(newGroup)
     return newGroup
   }, 'Błąd tworzenia grupy')
@@ -72,7 +72,7 @@ export const useVariantsStore = defineStore('variants', () => {
    * Backend nadaje numer: A → A1, A2; A1 → A1_1, A1_2.
    */
   const createChildVariant = wrapAction(async (
-    orderId: number | string,
+    projectId: number | string,
     parentId: number | string,
     data: {
       name: string
@@ -82,7 +82,7 @@ export const useVariantsStore = defineStore('variants', () => {
       priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
     }
   ) => {
-    const newVariant = await variantService.createChild(orderId, parentId, data)
+    const newVariant = await variantService.createChild(projectId, parentId, data)
     variants.value.push(newVariant)
     return newVariant
   }, 'Błąd tworzenia wariantu')

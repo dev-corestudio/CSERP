@@ -4,7 +4,7 @@
     <v-card-title class="bg-deep-purple-darken-1 text-white d-flex align-center pa-3">
       <v-icon start color="white" size="small">mdi-layers</v-icon>
       <span class="text-body-1 font-weight-bold">
-        {{ mode === 'order' ? 'Serie zamówienia' : 'Serie projektu' }}
+        Serie projektu
         <span class="text-body-2 opacity-70 ml-1">{{ entityNumber }}</span>
       </span>
       <v-spacer />
@@ -80,9 +80,7 @@
           <template v-slot:prepend>
             <span
               class="text-caption font-weight-bold mr-4"
-              :class="
-                serie.id === currentId ? 'text-deep-purple' : 'text-grey-darken-2'
-              "
+              :class="serie.id === currentId ? 'text-deep-purple' : 'text-grey-darken-2'"
             >
               #{{ serie.series }}
             </span>
@@ -90,7 +88,7 @@
 
           <!-- Treść -->
           <v-list-item-title class="text-body-2">
-            <span class="font-weight-bold">{{ fullEntityNumber(serie) }}</span>
+            <span class="font-weight-bold">{{ serie.full_project_number }}</span>
           </v-list-item-title>
           <v-list-item-subtitle class="text-caption">
             <span v-if="serie.description" class="text-truncate">
@@ -131,11 +129,9 @@ import { useMetadataStore } from "@/stores/metadata";
 // ─── Props / Emits ────────────────────────────────────────────────────────────
 
 const props = defineProps<{
-  /** Tryb: zamówienie lub projekt */
-  mode: "order" | "project";
-  /** ID aktualnie wyświetlanego zamówienia / projektu */
+  /** ID aktualnie wyświetlanego projektu */
   currentId: number;
-  /** Numer do wyświetlenia w nagłówku (np. "Z/0001" lub "P/0001") */
+  /** Numer projektu do wyświetlenia w nagłówku (np. "P/0001") */
   entityNumber?: string;
   /** Czy pokazać przycisk zamknięcia (gdy panel jest w modalu) */
   closable?: boolean;
@@ -159,20 +155,11 @@ const loading = ref(false);
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 
-onMounted(() => {
-  loadSeries();
-});
-
-watch(
-  () => props.currentId,
-  () => {
-    loadSeries();
-  }
-);
+onMounted(() => loadSeries());
+watch(() => props.currentId, () => loadSeries());
 
 // ─── Metody ───────────────────────────────────────────────────────────────────
 
-/** Załaduj listę serii */
 const loadSeries = async () => {
   loading.value = true;
   try {
@@ -185,34 +172,20 @@ const loadSeries = async () => {
   }
 };
 
-/** Nawiguj do innej serii */
 const navigateToSeries = (serie: SeriesListItem) => {
   if (serie.id === props.currentId) return;
   emit("series-changed", serie.id);
-  router.push(`/${props.mode === "order" ? "orders" : "projects"}/${serie.id}`);
+  router.push(`/projects/${serie.id}`);
 };
 
-/** Pełny numer serii zależny od trybu */
-const fullEntityNumber = (serie: SeriesListItem): string =>
-  props.mode === "order"
-    ? (serie as any).full_order_number
-    : (serie as any).full_project_number;
-
-/** Klucz grupy statusów w metadanych */
-const statusGroupName = () =>
-  props.mode === "order" ? "orderStatuses" : "projectStatuses";
-
-/** Kolor statusu */
 const getStatusColor = (status: string): string => {
-  const config = metadataStore.getConfig(statusGroupName(), status);
+  const config = metadataStore.getConfig("projectStatuses", status);
   return config?.color || "grey";
 };
 
-/** Etykieta statusu */
 const getStatusLabel = (status: string): string =>
-  metadataStore.getLabel(statusGroupName(), status);
+  metadataStore.getLabel("projectStatuses", status);
 
-/** Formatuj datę jako DD.MM.YYYY */
 const formatDate = (dateStr: string): string => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("pl-PL", {

@@ -1,5 +1,5 @@
 // src/services/seriesService.ts
-// Serwis API do zarządzania seriami zamówień
+// Serwis API do zarządzania seriami projektów
 import api from './api'
 
 // ─── Typy odpowiedzi API ───────────────────────────────────────────────────────
@@ -82,8 +82,8 @@ export const seriesService = {
      * Pobierz wszystkie serie dla numeru zamówienia (np. Z/0001)
      * Używa ID dowolnej serii z tej grupy
      */
-    async getAllSeries(orderId: number | string): Promise<SeriesListItem[]> {
-        const response = await api.get(`/projects/${orderId}/series`)
+    async getAllSeries(projectId: number | string): Promise<SeriesListItem[]> {
+        const response = await api.get(`/projects/${projectId}/series`)
         const data = response.data
         if (Array.isArray(data)) return data
         return (data as any).data || []
@@ -92,8 +92,8 @@ export const seriesService = {
     /**
      * Pobierz warianty z danej serii do selektora kopiowania
      */
-    async getVariantsForSelector(orderId: number | string): Promise<VariantForCopy[]> {
-        const response = await api.get(`/projects/${orderId}/series/variants`)
+    async getVariantsForSelector(projectId: number | string): Promise<VariantForCopy[]> {
+        const response = await api.get(`/projects/${projectId}/series/variants`)
         const data = response.data
         if (Array.isArray(data)) return data
         return (data as any).data || []
@@ -103,10 +103,10 @@ export const seriesService = {
      * Utwórz nową serię - opcjonalnie z kopiowaniem wariantów
      */
     async createSeries(
-        orderId: number | string,
+        projectId: number | string,
         payload: CreateSeriesPayload
     ): Promise<CreateSeriesResponse> {
-        const response = await api.post(`/projects/${orderId}/series/create`, payload)
+        const response = await api.post(`/projects/${projectId}/series/create`, payload)
         return response.data
     }
 }

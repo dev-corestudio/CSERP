@@ -7,11 +7,11 @@ export const variantService = {
   // =========================================================================
 
   /**
-   * Pobierz wszystkie warianty (grupy i warianty) dla zamówienia.
+   * Pobierz wszystkie warianty (grupy i warianty) dla projektu.
    * Backend zwraca płaską listę — grupy mają is_group=true, quantity=0.
    */
-  async getAll(orderId: number | string): Promise<Variant[]> {
-    const response = await api.get(`/projects/${orderId}/variants`)
+  async getAll(projectId: number | string): Promise<Variant[]> {
+    const response = await api.get(`/projects/${projectId}/variants`)
     const data = response.data
     if (Array.isArray(data)) return data
     return (data as any).data || []
@@ -31,13 +31,13 @@ export const variantService = {
   // =========================================================================
 
   /**
-   * Utwórz nową GRUPĘ dla zamówienia.
+   * Utwórz nową GRUPĘ dla projektu.
    * Backend automatycznie nadaje kolejną literę (A, B, C…) i ustawia quantity=0.
    *
    * Payload: { name, description? }
    */
-  async createGroup(orderId: number | string, data: { name: string; description?: string }): Promise<Variant> {
-    const response = await api.post(`/projects/${orderId}/variants`, data)
+  async createGroup(projectId: number | string, data: { name: string; description?: string }): Promise<Variant> {
+    const response = await api.post(`/projects/${projectId}/variants`, data)
     const resData = response.data
     return (resData as any).data || resData
   },
@@ -49,7 +49,7 @@ export const variantService = {
    * Payload: { name, quantity (≥1), type (SERIAL|PROTOTYPE), description? }
    */
   async createChild(
-    orderId: number | string,
+    projectId: number | string,
     parentId: number | string,
     data: {
       name: string
@@ -58,7 +58,7 @@ export const variantService = {
       description?: string
     }
   ): Promise<Variant> {
-    const response = await api.post(`/projects/${orderId}/variants/${parentId}/children`, data)
+    const response = await api.post(`/projects/${projectId}/variants/${parentId}/children`, data)
     const resData = response.data
     return (resData as any).data || resData
   },

@@ -173,7 +173,7 @@
 
               <router-link
                 v-if="item.production_order?.variant?.id"
-                :to="`/orders/${item.production_order.variant.order_id}/variants/${item.production_order.variant.id}`"
+                :to="`/projects/${item.production_order.variant.order_id}/variants/${item.production_order.variant.id}`"
                 class="text-caption text-decoration-none text-primary font-weight-medium hover-underline"
                 @click.stop
               >
