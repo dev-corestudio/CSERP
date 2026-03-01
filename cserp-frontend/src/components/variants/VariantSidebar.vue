@@ -82,21 +82,45 @@
           </div>
         </div>
 
-        <!-- Priorytet -->
-        <div v-if="variant?.project?.priority" class="detail-row">
-          <div class="label">Priorytet projektu</div>
+        <!-- Priorytet wariantu -->
+        <div v-if="!variant?.is_group" class="detail-row">
+          <div class="label">Priorytet</div>
           <div class="value">
-            <v-chip
-              size="small"
-              :color="formatPriority(variant.project.priority).color"
-              variant="flat"
-              class="font-weight-bold"
+            <v-select
+              :model-value="variant?.priority"
+              :items="metadataStore.projectPriorities"
+              item-title="label"
+              item-value="value"
+              density="compact"
+              variant="outlined"
+              hide-details
+              :loading="inlineLoading === 'priority'"
+              class="status-select"
+              @update:model-value="(val) => $emit('update-inline', 'priority', val)"
             >
-              <v-icon start size="x-small">{{
-                formatPriority(variant.project.priority).icon
-              }}</v-icon>
-              {{ formatPriority(variant.project.priority).label }}
-            </v-chip>
+              <template v-slot:selection="{ item }">
+                <div class="d-flex align-center" :class="`text-${item.raw.color}`">
+                  <v-icon size="small" class="mr-2">{{ item.raw.icon }}</v-icon>
+                  <span class="font-weight-bold" style="font-size: 0.85rem">
+                    {{ item.raw.label }}
+                  </span>
+                </div>
+              </template>
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-bind="props" density="compact">
+                  <template v-slot:title>
+                    <div class="d-flex align-center">
+                      <v-icon :color="item.raw.color" size="small" class="mr-2">
+                        {{ item.raw.icon }}
+                      </v-icon>
+                      <span style="font-size: 0.95rem; color: rgba(0, 0, 0, 0.87)">
+                        {{ item.raw.label }}
+                      </span>
+                    </div>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-select>
           </div>
         </div>
 
