@@ -23,7 +23,7 @@ class RcpAdminController extends Controller
         $query = ProductionService::with([
             'workstation',
             'assignedWorker',
-            'productionOrder.variant.order.customer'
+            'productionOrder.variant.project.customer'
         ]);
 
         // Filtrowanie Status
@@ -75,8 +75,8 @@ class RcpAdminController extends Controller
                     ->orWhereHas('productionOrder.variant', function ($lq) use ($search) {
                         $lq->where('name', 'like', "%{$search}%")
                             ->orWhere('variant_number', 'like', "%{$search}%")
-                            ->orWhereHas('order', function ($oq) use ($search) {
-                                $oq->where('order_number', 'like', "%{$search}%")
+                            ->orWhereHas('project', function ($oq) use ($search) {
+                                $oq->where('project_number', 'like', "%{$search}%")
                                     ->orWhereHas('customer', function ($cq) use ($search) {
                                         $cq->where('name', 'like', "%{$search}%");
                                     });
