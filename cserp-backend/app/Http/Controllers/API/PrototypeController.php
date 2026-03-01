@@ -40,7 +40,7 @@ class PrototypeController extends Controller
     public function show(Prototype $prototype): JsonResponse
     {
         $prototype->load([
-            'variant.order.customer',
+            'variant.project.customer',
             'materials.assortment',
             'services.workstation',
             'services.assignedWorker',

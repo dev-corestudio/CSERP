@@ -190,8 +190,8 @@ class ProjectController extends Controller
 
             DB::beginTransaction();
 
-            // Serwer generuje kolejny numer projektu
-            $maxNumber = Project::max('project_number');
+            // Serwer generuje kolejny numer projektu — lockForUpdate zapobiega race condition
+            $maxNumber = Project::lockForUpdate()->max('project_number');
             $nextNumber = $maxNumber ? intval($maxNumber) + 1 : 1000;
             $projectNumber = str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
 
@@ -327,6 +327,7 @@ class ProjectController extends Controller
         try {
             $project->load([
                 'variants.approvedQuotation',
+                'variants.materials',
                 'variants.productionOrder.services',
             ]);
 
@@ -346,19 +347,17 @@ class ProjectController extends Controller
                 $approvedMat = $approvedQ ? (float) $approvedQ->total_materials_cost : 0.0;
                 $approvedSvc = $approvedQ ? (float) $approvedQ->total_services_cost : 0.0;
 
-                // Koszty rzeczywiste materiałów
-                $actualMat = (float) \App\Models\VariantMaterial::where('variant_id', $variant->id)
-                    ->sum('total_cost');
+                // Koszty rzeczywiste materiałów — z eager-loaded kolekcji
+                $actualMat = (float) $variant->materials->sum('total_cost');
 
                 // Koszty rzeczywiste usług — tylko COMPLETED i IN_PROGRESS
                 $actualSvc = 0.0;
                 if ($variant->productionOrder) {
-                    $actualSvc = (float) \App\Models\ProductionService::where('production_order_id', $variant->productionOrder->id)
-                        ->whereIn('status', [
-                            ProductionStatus::COMPLETED->value,
-                            ProductionStatus::IN_PROGRESS->value,
-                        ])
-                        ->whereNotNull('actual_cost')
+                    $actualSvc = (float) $variant->productionOrder->services
+                        ->filter(fn($s) =>
+                            in_array($s->status, [ProductionStatus::COMPLETED, ProductionStatus::IN_PROGRESS])
+                            && $s->actual_cost !== null
+                        )
                         ->sum('actual_cost');
                 }
 

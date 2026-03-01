@@ -53,7 +53,7 @@ class QuotationController extends Controller
     {
         try {
             $quotation->load([
-                'variant.order.customer',
+                'variant.project.customer',
                 'items.materials.assortmentItem',
                 'items.services.assortmentItem',
                 'approvedBy'
@@ -345,21 +345,21 @@ class QuotationController extends Controller
     {
         try {
             $quotation->load([
-                'variant.order.customer',
+                'variant.project.customer',
                 'items.materials.assortmentItem',
                 'items.services.assortmentItem',
                 'approvedBy'
             ]);
 
-            $filename = 'Wycena_' . $quotation->variant->order->full_order_number
+            $filename = 'Wycena_' . $quotation->variant->project->full_project_number
                 . '_v' . $quotation->version_number . '.pdf';
 
             $filename = str_replace('/', '-', $filename);
 
             $pdf = Pdf::loadView('quotation', [
                 'quotation' => $quotation,
-                'order' => $quotation->variant->order,
-                'customer' => $quotation->variant->order->customer,
+                'project' => $quotation->variant->project,
+                'customer' => $quotation->variant->project->customer,
                 'variant' => $quotation->variant
             ]);
 

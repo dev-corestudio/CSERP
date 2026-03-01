@@ -145,6 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('variants/{variant}/quotations', [QuotationController::class, 'store']);
     Route::get('quotations/{quotation}', [QuotationController::class, 'show']);
     Route::put('quotations/{quotation}', [QuotationController::class, 'update']);
+    Route::delete('quotations/{quotation}', [QuotationController::class, 'destroy']);
     Route::patch('quotations/{quotation}/approve', [QuotationController::class, 'approve']);
     Route::get('quotations/{quotation}/pdf', [QuotationController::class, 'downloadPdf']);
     Route::post('quotations/{quotation}/duplicate', [QuotationController::class, 'duplicate']);
@@ -160,6 +161,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('prototypes/{prototype}', [PrototypeController::class, 'update']);
     Route::patch('prototypes/{prototype}/approve', [PrototypeController::class, 'approve']);
     Route::patch('prototypes/{prototype}/reject', [PrototypeController::class, 'reject']);
+    Route::get('prototypes/{prototype}/services', [PrototypeController::class, 'services']);
+    Route::post('prototypes/{prototype}/services', [PrototypeController::class, 'storeService']);
+    Route::put('prototype-services/{service}', [PrototypeController::class, 'updateService']);
+    Route::delete('prototype-services/{service}', [PrototypeController::class, 'destroyService']);
 
     // =========================================================================
     // MATERIAŁY PROTOTYPU

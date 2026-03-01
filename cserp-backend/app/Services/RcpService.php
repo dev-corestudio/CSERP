@@ -276,28 +276,30 @@ class RcpService
      */
     public function pauseWork(int $taskId): array
     {
-        $task = ProductionService::findOrFail($taskId);
+        return DB::transaction(function () use ($taskId) {
+            $task = ProductionService::lockForUpdate()->findOrFail($taskId);
 
-        if ($task->status !== ProductionStatus::IN_PROGRESS) {
-            throw new \Exception('Można wstrzymać tylko zadanie w toku');
-        }
+            if ($task->status !== ProductionStatus::IN_PROGRESS) {
+                throw new \Exception('Można wstrzymać tylko zadanie w toku');
+            }
 
-        $task->update(['status' => ProductionStatus::PAUSED]);
+            $task->update(['status' => ProductionStatus::PAUSED]);
 
-        if ($task->workstation) {
-            $task->workstation->update(['status' => WorkstationStatus::PAUSED]);
-        }
+            if ($task->workstation) {
+                $task->workstation->update(['status' => WorkstationStatus::PAUSED]);
+            }
 
-        // elapsed_seconds = null — czas pauzy obliczany przy RESUME przez parowanie
-        ServiceTimeLog::create([
-            'production_service_id' => $task->id,
-            'user_id' => $task->assigned_to_user_id,
-            'event_type' => EventType::PAUSE,
-            'event_timestamp' => now(),
-            'elapsed_seconds' => null,
-        ]);
+            // elapsed_seconds = null — czas pauzy obliczany przy RESUME przez parowanie
+            ServiceTimeLog::create([
+                'production_service_id' => $task->id,
+                'user_id' => $task->assigned_to_user_id,
+                'event_type' => EventType::PAUSE,
+                'event_timestamp' => now(),
+                'elapsed_seconds' => null,
+            ]);
 
-        return ['task' => $task, 'message' => 'Praca wstrzymana'];
+            return ['task' => $task, 'message' => 'Praca wstrzymana'];
+        });
     }
 
     // =========================================================================
@@ -310,40 +312,42 @@ class RcpService
      */
     public function resumeWork(int $taskId): array
     {
-        $task = ProductionService::findOrFail($taskId);
+        return DB::transaction(function () use ($taskId) {
+            $task = ProductionService::lockForUpdate()->findOrFail($taskId);
 
-        if ($task->status !== ProductionStatus::PAUSED) {
-            throw new \Exception('Można wznowić tylko wstrzymane zadanie');
-        }
+            if ($task->status !== ProductionStatus::PAUSED) {
+                throw new \Exception('Można wznowić tylko wstrzymane zadanie');
+            }
 
-        $openPause = ServiceTimeLog::where('production_service_id', $taskId)
-            ->where('event_type', EventType::PAUSE)
-            ->whereNull('elapsed_seconds')
-            ->latest('event_timestamp')
-            ->first();
+            $openPause = ServiceTimeLog::where('production_service_id', $taskId)
+                ->where('event_type', EventType::PAUSE)
+                ->whereNull('elapsed_seconds')
+                ->latest('event_timestamp')
+                ->first();
 
-        if (!$openPause) {
-            throw new \Exception('Brak logu pauzy — nie można wyliczyć czasu przerwy');
-        }
+            if (!$openPause) {
+                throw new \Exception('Brak logu pauzy — nie można wyliczyć czasu przerwy');
+            }
 
-        $pauseDuration = max(0, time() - $this->logToUnixTimestamp($openPause));
-        $openPause->update(['elapsed_seconds' => $pauseDuration]);
+            $pauseDuration = max(0, time() - $this->logToUnixTimestamp($openPause));
+            $openPause->update(['elapsed_seconds' => $pauseDuration]);
 
-        $task->update(['status' => ProductionStatus::IN_PROGRESS]);
+            $task->update(['status' => ProductionStatus::IN_PROGRESS]);
 
-        if ($task->workstation) {
-            $task->workstation->update(['status' => WorkstationStatus::ACTIVE]);
-        }
+            if ($task->workstation) {
+                $task->workstation->update(['status' => WorkstationStatus::ACTIVE]);
+            }
 
-        ServiceTimeLog::create([
-            'production_service_id' => $task->id,
-            'user_id' => $task->assigned_to_user_id,
-            'event_type' => EventType::RESUME,
-            'event_timestamp' => now(),
-            'elapsed_seconds' => null,
-        ]);
+            ServiceTimeLog::create([
+                'production_service_id' => $task->id,
+                'user_id' => $task->assigned_to_user_id,
+                'event_type' => EventType::RESUME,
+                'event_timestamp' => now(),
+                'elapsed_seconds' => null,
+            ]);
 
-        return ['task' => $task, 'message' => 'Praca wznowiona'];
+            return ['task' => $task, 'message' => 'Praca wznowiona'];
+        });
     }
 
     // =========================================================================

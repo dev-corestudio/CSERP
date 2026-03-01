@@ -158,8 +158,12 @@ class RcpController extends Controller
      *
      * POST /api/rcp/pause/{task}
      */
-    public function pause(ProductionService $task): JsonResponse
+    public function pause(Request $request, ProductionService $task): JsonResponse
     {
+        if ($task->assigned_to_user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Nie możesz zarządzać cudzym zadaniem.'], 403);
+        }
+
         try {
             $result = $this->rcpService->pauseWork($task->id);
             return response()->json($result);
@@ -173,8 +177,12 @@ class RcpController extends Controller
      *
      * POST /api/rcp/resume/{task}
      */
-    public function resume(ProductionService $task): JsonResponse
+    public function resume(Request $request, ProductionService $task): JsonResponse
     {
+        if ($task->assigned_to_user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Nie możesz zarządzać cudzym zadaniem.'], 403);
+        }
+
         try {
             $result = $this->rcpService->resumeWork($task->id);
             return response()->json($result);
@@ -188,8 +196,12 @@ class RcpController extends Controller
      *
      * POST /api/rcp/stop/{task}
      */
-    public function stop(ProductionService $task): JsonResponse
+    public function stop(Request $request, ProductionService $task): JsonResponse
     {
+        if ($task->assigned_to_user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Nie możesz zarządzać cudzym zadaniem.'], 403);
+        }
+
         try {
             $result = $this->rcpService->stopWork($task->id);
             return response()->json($result);
