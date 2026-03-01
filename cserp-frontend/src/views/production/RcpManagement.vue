@@ -305,6 +305,7 @@ import TimeLogsDialog from "@/components/production/TimeLogsDialog.vue";
 import { useRcpAdminStore } from "@/stores/rcpAdmin";
 import { useWorkstationStore } from "@/stores/workstations";
 import { useStatusFormatter } from "@/composables/useStatusFormatter";
+import { usePersistedFilters } from "@/composables/usePersistedFilters";
 import { debounce } from "lodash";
 
 const rcpAdminStore = useRcpAdminStore();
@@ -319,8 +320,8 @@ const selectedTask = ref(null);
 const workers = ref([]);
 const workstations = ref([]);
 
-// Filtry - daty są teraz datetime-local
-const filters = ref({
+// Filtry - persystowane w localStorage
+const filters = usePersistedFilters("rcp:filters", {
   search: "",
   status: "all",
   worker_id: null,

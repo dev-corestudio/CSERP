@@ -183,13 +183,14 @@ import ProjectFormDialog from "@/components/projects/ProjectFormDialog.vue";
 import { useMetadataStore } from "@/stores/metadata";
 import { useStatusFormatter } from "@/composables/useStatusFormatter";
 import { useServerTable } from "@/composables/useServerTable";
+import { usePersistedFilters } from "@/composables/usePersistedFilters";
 
 const metadataStore = useMetadataStore();
 const { formatProjectStatus } = useStatusFormatter();
 const router = useRouter();
 
-// Filtry (reaktywne — automatycznie przeładowują tabelę)
-const filters = ref({
+// Filtry (reaktywne — automatycznie przeładowują tabelę, persystowane w localStorage)
+const filters = usePersistedFilters("projects:filters", {
   status: "all",
   quick_filter: "active",
 });
@@ -209,6 +210,7 @@ const {
   defaultSortBy: "created_at",
   defaultSortDir: "desc",
   extraFilters: filters,
+  persistKey: "projects",
 });
 
 // Dialog state

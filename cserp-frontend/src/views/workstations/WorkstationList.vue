@@ -155,10 +155,11 @@ import PageHeader from "@/components/layout/PageHeader.vue";
 import WorkstationFormDialog from "@/components/workstations/WorkstationFormDialog.vue";
 // Import API tylko do pobrania metadanych
 import api from "@/services/api";
+import { usePersistedFilters } from "@/composables/usePersistedFilters";
 
 const workstationStore = useWorkstationStore();
 
-const search = ref("");
+const search = usePersistedFilters<string>("workstations:search", "");
 const dialog = ref(false);
 const editingItem = ref(null);
 

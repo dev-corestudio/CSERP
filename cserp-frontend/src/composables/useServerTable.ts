@@ -26,6 +26,8 @@ interface UseServerTableConfig {
     extraFilters?: Ref<Record<string, any>>;
     /** Callback po udanym pobraniu — np. do aktualizacji statystyk */
     onSuccess?: (response: any) => void;
+    /** Klucz localStorage do persystencji pola search między nawigacjami */
+    persistKey?: string;
 }
 
 export function useServerTable(endpoint: string, config: UseServerTableConfig = {}) {
@@ -35,13 +37,23 @@ export function useServerTable(endpoint: string, config: UseServerTableConfig = 
         defaultSortDir = "desc",
         extraFilters,
         onSuccess,
+        persistKey,
     } = config;
 
     const items: Ref<any[]> = ref([]);
     const totalItems = ref(0);
     const loading = ref(false);
     const error: Ref<string | null> = ref(null);
-    const search = ref("");
+
+    // Przywróć search z localStorage jeśli podano persistKey
+    const searchStorageKey = persistKey ? `${persistKey}:search` : null;
+    let initialSearch = "";
+    if (searchStorageKey) {
+        try {
+            initialSearch = localStorage.getItem(searchStorageKey) ?? "";
+        } catch { /* ignore */ }
+    }
+    const search = ref(initialSearch);
 
     const options = ref<ServerTableOptions>({
         page: 1,
@@ -125,8 +137,11 @@ export function useServerTable(endpoint: string, config: UseServerTableConfig = 
         fetchData();
     }, 400);
 
-    // Watch na search → debounced fetch
-    watch(search, () => {
+    // Watch na search → debounced fetch + opcjonalny zapis do localStorage
+    watch(search, (val) => {
+        if (searchStorageKey) {
+            try { localStorage.setItem(searchStorageKey, val); } catch { /* ignore */ }
+        }
         debouncedSearch();
     });
 

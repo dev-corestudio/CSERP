@@ -207,21 +207,23 @@ import { useAssortmentStore } from "@/stores/assortment";
 import { useMetadataStore } from "@/stores/metadata";
 import { useStatusFormatter } from "@/composables/useStatusFormatter";
 import { useServerTable } from "@/composables/useServerTable";
+import { usePersistedFilters } from "@/composables/usePersistedFilters";
 import api from "@/services/api";
 
 const { formatAssortmentType } = useStatusFormatter();
 const assortmentStore = useAssortmentStore();
 const metadataStore = useMetadataStore();
 
-// Filtry
-const showInactive = ref(false);
-const categories = ref<string[]>([]);
-
-const filters = ref<Record<string, any>>({
+// Filtry (persystowane w localStorage)
+const filters = usePersistedFilters<Record<string, any>>("assortment:filters", {
   type: null,
   category: null,
   is_active: true, // domyślnie tylko aktywne
 });
+
+// showInactive wynika z is_active — odtwarzamy stan na podstawie przywróconych filtrów
+const showInactive = ref(filters.value.is_active === null);
+const categories = ref<string[]>([]);
 
 // Server-side table
 const {
@@ -238,6 +240,7 @@ const {
   defaultSortBy: "category",
   defaultSortDir: "asc",
   extraFilters: filters,
+  persistKey: "assortment",
 });
 
 // Dialogi
