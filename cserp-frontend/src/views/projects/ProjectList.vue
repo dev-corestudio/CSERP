@@ -49,7 +49,20 @@
             />
           </v-col>
 
-          <v-col cols="12" md="5" class="d-flex align-center justify-end gap-2">
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="filters.quick_filter"
+              label="Zakres projektów"
+              :items="quickFilterOptions"
+              item-title="label"
+              item-value="value"
+              variant="outlined"
+              density="compact"
+              hide-details
+            />
+          </v-col>
+
+          <v-col cols="12" md="2" class="d-flex justify-end gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
                 <v-btn v-bind="props" icon variant="text" @click="resetFilters">
@@ -64,18 +77,6 @@
                 </v-btn>
               </template>
             </v-tooltip>
-            <v-btn-toggle
-              v-model="filters.quick_filter"
-              variant="outlined"
-              divided
-              mandatory
-            >
-              <v-btn value="active" prepend-icon="mdi-clock-outline"> AKTYWNE </v-btn>
-              <v-btn value="completed" prepend-icon="mdi-check-circle">
-                ZAKOŃCZONE
-              </v-btn>
-              <v-btn value="all" prepend-icon="mdi-infinity"> WSZYSTKIE </v-btn>
-            </v-btn-toggle>
           </v-col>
         </v-row>
       </v-card-text>
@@ -240,6 +241,12 @@ const statusOptions = computed(() => [
   { label: "Wszystkie", value: "all" },
   ...metadataStore.projectStatuses,
 ]);
+
+const quickFilterOptions = [
+  { label: "Aktywne", value: "active" },
+  { label: "Zakończone", value: "completed" },
+  { label: "Wszystkie", value: "all" },
+];
 
 const headers = [
   { title: "Numer", key: "full_project_number", width: "160px", sortable: false },
