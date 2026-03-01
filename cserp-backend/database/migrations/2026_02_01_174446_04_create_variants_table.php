@@ -5,6 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Enums\VariantType;
 use App\Enums\VariantStatus;
+use App\Enums\ProjectPriority;
 
 return new class extends Migration {
     public function up(): void
@@ -33,6 +34,10 @@ return new class extends Migration {
             // Status: DRAFT, QUOTATION, PRODUCTION...
             $table->enum('status', array_column(VariantStatus::cases(), 'value'))
                 ->default(VariantStatus::DRAFT->value);
+
+            // Priorytet: LOW, NORMAL, HIGH, URGENT
+            $table->enum('priority', array_column(ProjectPriority::cases(), 'value'))
+                ->default(ProjectPriority::NORMAL->value);
 
             $table->boolean('is_approved')->default(false);
             $table->text('feedback_notes')->nullable();
