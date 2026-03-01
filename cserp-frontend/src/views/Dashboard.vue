@@ -1,59 +1,28 @@
 <template>
-  <v-container fluid class="pa-4">
-
-    <!-- ── Welcome banner ─────────────────────────────────────── -->
-    <v-card
-      class="mb-6 rounded-xl overflow-hidden"
-      elevation="0"
-      style="background: linear-gradient(135deg, #1565C0 0%, #0D47A1 50%, #283593 100%)"
-    >
-      <v-card-text class="pa-6">
-        <v-row align="center">
-          <v-col>
-            <div class="text-caption text-blue-lighten-3 font-weight-medium text-uppercase mb-1">
-              {{ greeting }}
-            </div>
-            <div class="text-h4 font-weight-bold text-white mb-1">
-              {{ authStore.user?.name || 'Użytkowniku' }}
-            </div>
-            <div class="text-body-2 text-blue-lighten-3">
-              {{ currentDate }}
-            </div>
-          </v-col>
-          <v-col cols="auto" class="d-none d-sm-flex">
-            <v-avatar size="80" color="white" style="opacity: 0.12">
-              <v-icon size="52" color="white">mdi-view-dashboard</v-icon>
-            </v-avatar>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+  <v-container fluid>
+    <page-header
+      title="Dashboard"
+      :subtitle="`${greeting}, ${authStore.user?.name || 'Użytkowniku'}! ${currentDate}`"
+      icon="mdi-view-dashboard"
+      icon-color="primary"
+      :breadcrumbs="[]"
+    />
 
     <!-- ── KPI Stats (tylko canManageSystem) ──────────────────── -->
-    <v-row v-if="authStore.canManageSystem" class="mb-2">
+    <v-row v-if="authStore.canManageSystem" class="mb-4">
       <v-col cols="6" md="3" v-for="stat in stats" :key="stat.label">
-        <v-card class="rounded-xl" elevation="1" :loading="statsLoading">
+        <v-card elevation="2" :loading="statsLoading">
           <v-card-text class="pa-4">
-            <div class="d-flex align-center justify-space-between mb-3">
-              <v-avatar :color="stat.color" size="44" rounded="lg">
+            <div class="d-flex align-center mb-3">
+              <v-avatar :color="stat.color" size="44" rounded="lg" class="mr-3">
                 <v-icon color="white" size="22">{{ stat.icon }}</v-icon>
               </v-avatar>
-              <v-chip
-                v-if="stat.trend !== undefined"
-                size="x-small"
-                :color="stat.trend >= 0 ? 'success' : 'error'"
-                variant="tonal"
-                class="font-weight-bold"
-              >
-                <v-icon start size="10">{{ stat.trend >= 0 ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
-                {{ Math.abs(stat.trend) }}
-              </v-chip>
-            </div>
-            <div class="text-h4 font-weight-bold text-grey-darken-3 mb-1">
-              {{ statsLoading ? '—' : stat.value }}
-            </div>
-            <div class="text-caption text-medium-emphasis font-weight-medium">
-              {{ stat.label }}
+              <div>
+                <div class="text-h5 font-weight-bold">
+                  {{ statsLoading ? '—' : stat.value }}
+                </div>
+                <div class="text-caption text-medium-emphasis">{{ stat.label }}</div>
+              </div>
             </div>
           </v-card-text>
         </v-card>
@@ -63,59 +32,73 @@
     <v-row>
       <!-- ── Szybkie akcje ──────────────────────────────────────── -->
       <v-col cols="12" :md="authStore.canManageSystem ? 4 : 12">
-        <v-card class="rounded-xl h-100" elevation="1">
-          <v-card-title class="pa-4 pb-2 text-body-1 font-weight-bold">
-            <v-icon start size="18" color="primary">mdi-lightning-bolt</v-icon>
+        <v-card elevation="2">
+          <v-card-title class="d-flex align-center">
+            <v-icon class="mr-2">mdi-lightning-bolt</v-icon>
             Szybkie akcje
           </v-card-title>
-          <v-card-text class="pa-3">
-            <div class="d-flex flex-column gap-2">
+          <v-divider />
+          <v-card-text>
+            <v-row>
               <template v-if="authStore.canManageSystem">
-                <v-btn
+                <v-col
                   v-for="action in managerActions"
                   :key="action.route"
-                  :color="action.color"
-                  variant="tonal"
-                  size="large"
-                  class="justify-start rounded-lg"
-                  block
-                  @click="$router.push(action.route)"
+                  cols="12"
                 >
-                  <v-icon start>{{ action.icon }}</v-icon>
-                  <div class="text-left">
-                    <div class="font-weight-bold">{{ action.label }}</div>
-                    <div class="text-caption opacity-80">{{ action.sub }}</div>
-                  </div>
-                  <v-icon end size="18" class="ml-auto opacity-50">mdi-chevron-right</v-icon>
-                </v-btn>
+                  <v-card
+                    variant="outlined"
+                    hover
+                    @click="$router.push(action.route)"
+                    class="cursor-pointer"
+                  >
+                    <v-card-text class="d-flex align-center pa-3">
+                      <v-avatar :color="action.color" size="40" class="mr-3">
+                        <v-icon color="white" size="20">{{ action.icon }}</v-icon>
+                      </v-avatar>
+                      <div>
+                        <div class="font-weight-bold text-body-2">{{ action.label }}</div>
+                        <div class="text-caption text-medium-emphasis">{{ action.sub }}</div>
+                      </div>
+                      <v-spacer />
+                      <v-icon size="18" color="medium-emphasis">mdi-chevron-right</v-icon>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
               </template>
 
-              <v-btn
-                color="success"
-                variant="tonal"
-                size="large"
-                class="justify-start rounded-lg"
-                block
-                @click="$router.push('/rcp/workstation')"
-              >
-                <v-icon start>mdi-timer-play</v-icon>
-                <div class="text-left">
-                  <div class="font-weight-bold">Panel Pracownika</div>
-                  <div class="text-caption opacity-80">Timer produkcyjny</div>
-                </div>
-                <v-icon end size="18" class="ml-auto opacity-50">mdi-chevron-right</v-icon>
-              </v-btn>
-            </div>
+              <v-col cols="12">
+                <v-card
+                  variant="outlined"
+                  hover
+                  color="success"
+                  @click="$router.push('/rcp/workstation')"
+                  class="cursor-pointer"
+                >
+                  <v-card-text class="d-flex align-center pa-3">
+                    <v-avatar color="success" size="40" class="mr-3">
+                      <v-icon color="white" size="20">mdi-timer-play</v-icon>
+                    </v-avatar>
+                    <div>
+                      <div class="font-weight-bold text-body-2">Panel Pracownika</div>
+                      <div class="text-caption text-medium-emphasis">Timer produkcyjny</div>
+                    </div>
+                    <v-spacer />
+                    <v-icon size="18" color="medium-emphasis">mdi-chevron-right</v-icon>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
           </v-card-text>
         </v-card>
       </v-col>
 
       <!-- ── Ostatnie otwarte projekty (per user, localStorage) ── -->
       <v-col v-if="authStore.canManageSystem" cols="12" md="8">
-        <v-card class="rounded-xl" elevation="1">
-          <v-card-title class="pa-4 pb-2 d-flex align-center">
-            <v-icon start size="18" color="primary">mdi-history</v-icon>
-            <span class="text-body-1 font-weight-bold">Ostatnie otwarte projekty</span>
+        <v-card elevation="2">
+          <v-card-title class="d-flex align-center">
+            <v-icon class="mr-2">mdi-history</v-icon>
+            Ostatnie otwarte projekty
             <v-spacer />
             <v-btn
               variant="text"
@@ -127,63 +110,61 @@
               <v-icon end size="16">mdi-arrow-right</v-icon>
             </v-btn>
           </v-card-title>
+          <v-divider />
 
-          <v-divider class="mx-4" />
-
-          <v-list v-if="recentProjects.length" lines="two" class="py-0" density="compact">
-            <v-list-item
-              v-for="(project, i) in recentProjects"
-              :key="project.id"
-              :to="`/projects/${project.id}`"
-              class="px-4"
-              :class="{ 'border-b': i < recentProjects.length - 1 }"
-              style="border-color: rgba(0,0,0,0.06)"
-            >
-              <template v-slot:prepend>
-                <v-avatar
-                  size="38"
-                  rounded="lg"
-                  :color="getStatusColor(project.overall_status)"
-                  class="mr-3"
-                >
-                  <span class="text-caption font-weight-bold text-white">
-                    {{ project.series || '01' }}
-                  </span>
-                </v-avatar>
-              </template>
-
-              <v-list-item-title class="font-weight-bold text-body-2">
-                <span class="text-primary">{{ project.full_project_number }}</span>
-                <span class="text-medium-emphasis font-weight-regular ml-2 text-caption">
-                  {{ project.customer?.name }}
-                </span>
-              </v-list-item-title>
-
-              <v-list-item-subtitle class="text-caption mt-1 text-truncate" style="max-width: 380px">
-                {{ project.description || '—' }}
-              </v-list-item-subtitle>
-
-              <template v-slot:append>
-                <div class="d-flex flex-column align-end gap-1">
-                  <v-chip
-                    size="x-small"
+          <v-list v-if="recentProjects.length" lines="two" class="py-0">
+            <template v-for="(project, i) in recentProjects" :key="project.id">
+              <v-list-item
+                :to="`/projects/${project.id}`"
+                class="px-4"
+              >
+                <template v-slot:prepend>
+                  <v-avatar
+                    size="36"
+                    rounded
                     :color="getStatusColor(project.overall_status)"
-                    variant="flat"
-                    class="font-weight-bold"
+                    class="mr-3"
                   >
-                    {{ getStatusLabel(project.overall_status) }}
-                  </v-chip>
-                  <span class="text-caption text-medium-emphasis">
-                    {{ formatDate(project.viewed_at) }}
+                    <span class="text-caption font-weight-bold text-white">
+                      {{ project.series || '01' }}
+                    </span>
+                  </v-avatar>
+                </template>
+
+                <v-list-item-title class="font-weight-bold text-body-2">
+                  <span class="text-primary">{{ project.full_project_number }}</span>
+                  <span class="text-medium-emphasis font-weight-regular ml-2 text-caption">
+                    {{ project.customer?.name }}
                   </span>
-                </div>
-              </template>
-            </v-list-item>
+                </v-list-item-title>
+
+                <v-list-item-subtitle class="text-caption text-truncate" style="max-width: 400px">
+                  {{ project.description || '—' }}
+                </v-list-item-subtitle>
+
+                <template v-slot:append>
+                  <div class="d-flex flex-column align-end" style="gap: 4px">
+                    <v-chip
+                      size="small"
+                      :color="getStatusColor(project.overall_status)"
+                      variant="flat"
+                    >
+                      <v-icon start size="small">{{ getStatusIcon(project.overall_status) }}</v-icon>
+                      {{ getStatusLabel(project.overall_status) }}
+                    </v-chip>
+                    <span class="text-caption text-medium-emphasis">
+                      {{ formatDate(project.viewed_at) }}
+                    </span>
+                  </div>
+                </template>
+              </v-list-item>
+              <v-divider v-if="i < recentProjects.length - 1" />
+            </template>
           </v-list>
 
-          <div v-else class="pa-8 text-center text-medium-emphasis">
-            <v-icon size="40" class="mb-2">mdi-clipboard-text-clock</v-icon>
-            <div class="text-body-2">Nie otwierałeś jeszcze żadnego projektu</div>
+          <div v-else class="text-center py-8">
+            <v-icon size="64" color="grey">mdi-clipboard-text-clock</v-icon>
+            <div class="text-h6 mt-4 text-medium-emphasis">Nie otwierałeś jeszcze żadnego projektu</div>
           </div>
         </v-card>
       </v-col>
@@ -195,6 +176,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRecentProjects } from "@/composables/useRecentProjects";
+import PageHeader from "@/components/layout/PageHeader.vue";
 import api from "@/services/api";
 
 const authStore = useAuthStore();
@@ -206,9 +188,7 @@ const now = new Date();
 
 const greeting = computed(() => {
   const h = now.getHours();
-  if (h < 12) return "Dzień dobry";
-  if (h < 18) return "Dzień dobry";
-  return "Dobry wieczór";
+  return h < 18 ? "Dzień dobry" : "Dobry wieczór";
 });
 
 const currentDate = computed(() =>
@@ -226,49 +206,29 @@ const statsLoading = ref(false);
 const statsData = ref({ active: 0, all: 0, customers: 0, unpaid: 0 });
 
 const stats = computed(() => [
-  {
-    label: "Aktywne projekty",
-    value: statsData.value.active,
-    icon: "mdi-clipboard-play",
-    color: "blue",
-  },
-  {
-    label: "Wszystkie projekty",
-    value: statsData.value.all,
-    icon: "mdi-clipboard-list",
-    color: "indigo",
-  },
-  {
-    label: "Klientów",
-    value: statsData.value.customers,
-    icon: "mdi-account-group",
-    color: "teal",
-  },
-  {
-    label: "Nieopłacone",
-    value: statsData.value.unpaid,
-    icon: "mdi-currency-usd-off",
-    color: "orange",
-  },
+  { label: "Aktywne projekty",   value: statsData.value.active,    icon: "mdi-clipboard-play",   color: "blue"   },
+  { label: "Wszystkie projekty", value: statsData.value.all,       icon: "mdi-clipboard-list",   color: "indigo" },
+  { label: "Klientów",           value: statsData.value.customers, icon: "mdi-account-group",    color: "teal"   },
+  { label: "Nieopłacone",        value: statsData.value.unpaid,    icon: "mdi-currency-usd-off", color: "orange" },
 ]);
 
 const fetchStats = async () => {
   statsLoading.value = true;
   try {
     const [activeRes, allRes, customersRes, unpaidRes] = await Promise.all([
-      api.get("/projects", { params: { per_page: 1, quick_filter: "active" } }),
-      api.get("/projects", { params: { per_page: 1, quick_filter: "all" } }),
+      api.get("/projects",  { params: { per_page: 1, quick_filter: "active" } }),
+      api.get("/projects",  { params: { per_page: 1, quick_filter: "all"    } }),
       api.get("/customers", { params: { per_page: 1 } }),
-      api.get("/projects", { params: { per_page: 1, quick_filter: "all", payment_status: "unpaid" } }),
+      api.get("/projects",  { params: { per_page: 1, quick_filter: "all", payment_status: "unpaid" } }),
     ]);
     statsData.value = {
-      active: activeRes.data.total ?? activeRes.data.meta?.total ?? 0,
-      all: allRes.data.total ?? allRes.data.meta?.total ?? 0,
+      active:    activeRes.data.total    ?? activeRes.data.meta?.total    ?? 0,
+      all:       allRes.data.total       ?? allRes.data.meta?.total       ?? 0,
       customers: customersRes.data.total ?? customersRes.data.meta?.total ?? 0,
-      unpaid: unpaidRes.data.total ?? unpaidRes.data.meta?.total ?? 0,
+      unpaid:    unpaidRes.data.total    ?? unpaidRes.data.meta?.total    ?? 0,
     };
   } catch {
-    // ciche niepowodzenie — stats pozostają 0
+    // ciche niepowodzenie
   } finally {
     statsLoading.value = false;
   }
@@ -281,32 +241,30 @@ const recentProjects = ref<any[]>([]);
 // ── Quick actions ──────────────────────────────────────────────────────────────
 
 const managerActions = [
-  { label: "Projekty", sub: "Zarządzaj projektami", route: "/projects", icon: "mdi-clipboard-text", color: "primary" },
-  { label: "Klienci", sub: "Baza klientów", route: "/customers", icon: "mdi-account-group", color: "teal" },
-  { label: "Asortyment", sub: "Materiały i usługi", route: "/assortment", icon: "mdi-package-variant", color: "orange" },
-  { label: "RCP — Zarządzanie", sub: "Czas pracy pracowników", route: "/production/rcp", icon: "mdi-clock-check", color: "purple" },
+  { label: "Projekty",        sub: "Zarządzaj projektami",       route: "/projects",       icon: "mdi-clipboard-text",  color: "blue"   },
+  { label: "Klienci",         sub: "Baza klientów",              route: "/customers",      icon: "mdi-account-group",   color: "teal"   },
+  { label: "Asortyment",      sub: "Materiały i usługi",         route: "/assortment",     icon: "mdi-package-variant", color: "orange" },
+  { label: "RCP — Zarządzanie", sub: "Czas pracy pracowników",  route: "/production/rcp", icon: "mdi-clock-check",     color: "purple" },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-const getStatusColor = (status: string) => {
-  const map: Record<string, string> = {
-    draft: "grey", quotation: "blue", prototype: "purple",
-    production: "orange", delivery: "cyan", completed: "success", cancelled: "error",
-  };
-  return map[status?.toLowerCase()] ?? "grey";
+const STATUS_MAP: Record<string, { label: string; color: string; icon: string }> = {
+  draft:      { label: "Szkic",       color: "grey",    icon: "mdi-pencil-outline"   },
+  quotation:  { label: "Wycena",      color: "blue",    icon: "mdi-file-document"    },
+  prototype:  { label: "Prototyp",    color: "purple",  icon: "mdi-test-tube"        },
+  production: { label: "Produkcja",   color: "orange",  icon: "mdi-factory"          },
+  delivery:   { label: "Dostawa",     color: "cyan",    icon: "mdi-truck-delivery"   },
+  completed:  { label: "Zakończone",  color: "success", icon: "mdi-check-circle"     },
+  cancelled:  { label: "Anulowane",   color: "error",   icon: "mdi-close-circle"     },
 };
 
-const getStatusLabel = (status: string) => {
-  const map: Record<string, string> = {
-    draft: "Szkic", quotation: "Wycena", prototype: "Prototyp",
-    production: "Produkcja", delivery: "Dostawa", completed: "Zakończone", cancelled: "Anulowane",
-  };
-  return map[status?.toLowerCase()] ?? status;
-};
+const getStatusColor = (s: string) => STATUS_MAP[s?.toLowerCase()]?.color  ?? "grey";
+const getStatusLabel = (s: string) => STATUS_MAP[s?.toLowerCase()]?.label  ?? s;
+const getStatusIcon  = (s: string) => STATUS_MAP[s?.toLowerCase()]?.icon   ?? "mdi-circle-small";
 
 const formatDate = (date: string) =>
-  date ? new Date(date).toLocaleDateString("pl-PL", { day: "2-digit", month: "short" }) : "—";
+  date ? new Date(date).toLocaleDateString("pl-PL", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 
@@ -320,6 +278,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.gap-2 { gap: 8px; }
-.border-b { border-bottom: 1px solid; }
+.cursor-pointer {
+  cursor: pointer;
+}
 </style>
