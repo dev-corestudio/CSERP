@@ -38,11 +38,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
       (originalRequest as any)._retry = true
 
-      localStorage.removeItem('auth_token')
-
       const authStore = useAuthStore()
-      authStore.token = null
-      authStore.user = null
+      authStore.clearSession()
 
       if (router.currentRoute.value.name !== 'Login') {
         router.push({

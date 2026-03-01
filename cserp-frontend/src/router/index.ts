@@ -257,8 +257,20 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Zabezpieczenie tras admina
-  if (to.path.startsWith('/admin') && !authStore.canManageSystem) {
-    return next({ name: 'WorkstationSelect' }) // Przekieruj workera
+  if (to.path.startsWith('/admin')) {
+    // Jeśli trasa nie ma requiresAuth, krok 3 nie załadował usera — robimy to tutaj
+    if (authStore.token && !authStore.user) {
+      try {
+        await authStore.fetchUser()
+      } catch (err) {
+        await authStore.logout()
+        return next({ path: '/' })
+      }
+    }
+
+    if (!authStore.canManageSystem) {
+      return next({ name: 'WorkstationSelect' })
+    }
   }
 
   // ---------------------------------------------------------------------------

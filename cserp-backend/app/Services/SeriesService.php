@@ -268,10 +268,20 @@ class SeriesService
     // POMOCNICZE
     // =========================================================================
 
-    private function getNextVariantNumber(Project $project): int
+    private function getNextVariantNumber(Project $project): string
     {
-        $maxNumber = Variant::where('project_id', $project->id)->max('variant_number');
-        return $maxNumber ? $maxNumber + 1 : 1;
+        $existingLetters = Variant::where('project_id', $project->id)
+            ->whereNull('parent_variant_id')
+            ->whereRaw('LENGTH(variant_number) = 1')
+            ->pluck('variant_number')
+            ->toArray();
+
+        $letter = 'A';
+        while (in_array($letter, $existingLetters)) {
+            $letter = chr(ord($letter) + 1);
+        }
+
+        return $letter;
     }
 
     private function buildCopyNote(Quotation $sourceQuotation, Variant $sourceVariant): string

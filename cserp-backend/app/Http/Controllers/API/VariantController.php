@@ -76,33 +76,37 @@ class VariantController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        // Następna wolna litera (pomija zajęte przez grupy top-level)
-        $existingLetters = $project->variants()
-            ->whereNull('parent_variant_id')
-            ->whereRaw('LENGTH(variant_number) = 1')
-            ->pluck('variant_number')
-            ->toArray();
+        return DB::transaction(function () use ($project, $validated) {
+            // lockForUpdate() — zapobiega race condition gdy dwa żądania
+            // jednocześnie pobierają litery i przydzielają tę samą
+            $existingLetters = $project->variants()
+                ->whereNull('parent_variant_id')
+                ->whereRaw('LENGTH(variant_number) = 1')
+                ->lockForUpdate()
+                ->pluck('variant_number')
+                ->toArray();
 
-        $letter = 'A';
-        while (in_array($letter, $existingLetters)) {
-            $letter = chr(ord($letter) + 1);
-        }
+            $letter = 'A';
+            while (in_array($letter, $existingLetters)) {
+                $letter = chr(ord($letter) + 1);
+            }
 
-        $group = $project->variants()->create([
-            'is_group'        => true,
-            'variant_number'  => $letter,
-            'name'            => $validated['name'],
-            'description'     => $validated['description'] ?? null,
-            'quantity'        => 0,
-            'type'            => VariantType::SERIAL,
-            'status'          => VariantStatus::DRAFT,
-            'parent_variant_id' => null,
-        ]);
+            $group = $project->variants()->create([
+                'is_group'          => true,
+                'variant_number'    => $letter,
+                'name'              => $validated['name'],
+                'description'       => $validated['description'] ?? null,
+                'quantity'          => 0,
+                'type'              => VariantType::SERIAL,
+                'status'            => VariantStatus::DRAFT,
+                'parent_variant_id' => null,
+            ]);
 
-        return response()->json([
-            'message' => 'Grupa utworzona pomyslnie',
-            'data'    => $group,
-        ], 201);
+            return response()->json([
+                'message' => 'Grupa utworzona pomyslnie',
+                'data'    => $group,
+            ], 201);
+        });
     }
 
     // =========================================================================

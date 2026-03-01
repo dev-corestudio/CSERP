@@ -123,6 +123,13 @@ export const useAuthStore = defineStore('auth', () => {
     return userData
   }
 
+  const clearSession = () => {
+    token.value = null
+    user.value = null
+    error.value = null
+    localStorage.removeItem('auth_token')
+  }
+
   return {
     user,
     token,
@@ -136,6 +143,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     loginWithPin,
     logout,
-    fetchUser
+    fetchUser,
+    clearSession
   }
 })
