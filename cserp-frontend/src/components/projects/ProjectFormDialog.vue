@@ -522,8 +522,10 @@ watch(
         }
 
         // Auto-przypisz zalogowanego użytkownika jako opiekuna
-        if (authStore.user?.id) {
-          form.value.assigned_to = authStore.user.id;
+        // tylko jeśli jest na liście opiekunów (TRADER / PROJECT_MANAGER)
+        const currentUserId = authStore.user?.id;
+        if (currentUserId && guardians.value.some((g) => g.id === currentUserId)) {
+          form.value.assigned_to = currentUserId;
         }
 
         formRef.value?.resetValidation();
