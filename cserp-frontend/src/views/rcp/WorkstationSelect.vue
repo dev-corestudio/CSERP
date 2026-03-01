@@ -387,7 +387,6 @@ const variantHeaders = [
   },
   { title: "Zlecenie", key: "order_info", align: "start" as const, width: "180px" },
   { title: "Produkt", key: "name", align: "start" as const },
-  { title: "Klient", key: "customer_name", align: "start" as const, width: "180px" },
   { title: "Ilość", key: "quantity", align: "center" as const, width: "90px" },
   { title: "", key: "actions", align: "end" as const, sortable: false, width: "50px" },
 ];
