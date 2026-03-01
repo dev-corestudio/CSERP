@@ -62,7 +62,7 @@
           <v-col cols="12" md="4" class="d-flex justify-end gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                <v-btn v-bind="props" icon variant="text" :color="hasActiveFilters ? 'warning' : undefined" @click="resetFilters">
                   <v-icon>mdi-filter-remove</v-icon>
                 </v-btn>
               </template>
@@ -308,7 +308,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog.vue";
@@ -386,6 +386,10 @@ const getProjectsLabel = (count: number) => {
   if (count >= 2 && count <= 4) return "projekty";
   return "projektów";
 };
+
+const hasActiveFilters = computed(
+  () => search.value !== "" || filters.value.type !== "all" || filters.value.is_active !== "all"
+);
 
 const resetFilters = () => {
   search.value = "";

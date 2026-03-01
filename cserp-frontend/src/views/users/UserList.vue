@@ -38,7 +38,7 @@
           <v-col cols="12" md="6" class="d-flex justify-end gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                <v-btn v-bind="props" icon variant="text" :color="hasActiveFilters ? 'warning' : undefined" @click="resetFilters">
                   <v-icon>mdi-filter-remove</v-icon>
                 </v-btn>
               </template>
@@ -172,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useUsersStore } from "@/stores/users";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import UserFormDialog from "@/components/users/UserFormDialog.vue";
@@ -194,6 +194,8 @@ const headers = [
   { title: "Status", key: "is_active", align: "center" },
   { title: "Akcje", key: "actions", align: "end", sortable: false },
 ];
+
+const hasActiveFilters = computed(() => search.value !== "");
 
 const resetFilters = () => {
   search.value = "";

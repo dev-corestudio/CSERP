@@ -65,7 +65,7 @@
           <v-col cols="12" md="2" class="d-flex justify-end gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                <v-btn v-bind="props" icon variant="text" :color="hasActiveFilters ? 'warning' : undefined" @click="resetFilters">
                   <v-icon>mdi-filter-remove</v-icon>
                 </v-btn>
               </template>
@@ -227,6 +227,10 @@ const {
   extraFilters: filters,
   persistKey: "projects",
 });
+
+const hasActiveFilters = computed(
+  () => search.value !== "" || filters.value.status !== "all" || filters.value.quick_filter !== "active"
+);
 
 const resetFilters = () => {
   search.value = "";

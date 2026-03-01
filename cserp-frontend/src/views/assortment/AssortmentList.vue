@@ -80,7 +80,7 @@
           <v-col cols="12" md="2" class="d-flex justify-end gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                <v-btn v-bind="props" icon variant="text" :color="hasActiveFilters ? 'warning' : undefined" @click="resetFilters">
                   <v-icon>mdi-filter-remove</v-icon>
                 </v-btn>
               </template>
@@ -216,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import AssortmentFormDialog from "@/components/assortment/AssortmentFormDialog.vue";
 import AssortmentHistoryDialog from "@/components/assortment/AssortmentHistoryDialog.vue";
@@ -306,6 +306,10 @@ watch(
 const onInactiveToggle = (val: boolean) => {
   filters.value.is_active = val ? null : true;
 };
+
+const hasActiveFilters = computed(
+  () => search.value !== "" || showInactive.value || filters.value.type !== null || filters.value.category !== null
+);
 
 const resetFilters = () => {
   search.value = "";

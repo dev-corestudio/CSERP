@@ -108,7 +108,7 @@
           <v-col cols="12" md="6" class="d-flex justify-end align-center gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" icon variant="text" @click="resetFilters">
+                <v-btn v-bind="props" icon variant="text" :color="hasActiveFilters ? 'warning' : undefined" @click="resetFilters">
                   <v-icon>mdi-filter-remove</v-icon>
                 </v-btn>
               </template>
@@ -304,7 +304,7 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import TaskEditDialog from "@/components/production/TaskEditDialog.vue";
 import TimeLogsDialog from "@/components/production/TimeLogsDialog.vue";
@@ -381,6 +381,16 @@ const applyFilters = () => {
 };
 
 const debouncedSearch = debounce(applyFilters, 500);
+
+const hasActiveFilters = computed(
+  () =>
+    filters.value.search !== "" ||
+    filters.value.status !== "all" ||
+    filters.value.worker_id !== null ||
+    filters.value.workstation_id !== null ||
+    filters.value.date_from !== null ||
+    filters.value.date_to !== null
+);
 
 const resetFilters = () => {
   filters.value = {
