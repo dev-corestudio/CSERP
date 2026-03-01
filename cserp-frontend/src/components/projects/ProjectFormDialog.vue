@@ -199,6 +199,31 @@
                 :items="priorityOptions"
               />
             </v-col>
+
+            <!-- Opiekun projektu -->
+            <v-col cols="12" md="6">
+              <v-autocomplete
+                v-model="form.assigned_to"
+                :items="guardians"
+                item-title="name"
+                item-value="id"
+                label="Opiekun projektu"
+                prepend-inner-icon="mdi-account-tie"
+                variant="outlined"
+                :loading="loadingGuardians"
+                placeholder="Wybierz opiekuna..."
+                no-data-text="Brak dostępnych opiekunów"
+                clearable
+              >
+                <template v-slot:item="{ item, props: itemProps }">
+                  <v-list-item v-bind="itemProps">
+                    <template v-slot:subtitle>
+                      <span class="text-caption">{{ roleLabel(item.raw.role) }}</span>
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+            </v-col>
           </v-row>
         </v-card-text>
 
@@ -242,6 +267,7 @@ import { ref, computed, watch } from "vue";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog.vue";
 import api from "@/services/api";
 import { projectService } from "@/services/projectService";
+import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps({
   modelValue: {
@@ -260,6 +286,8 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "saved"]);
 
+const authStore = useAuthStore();
+
 // ─── Stan formularza ──────────────────────────────────────────────────────────
 
 const formRef = ref(null);
@@ -274,12 +302,17 @@ const nextNumberPreview = ref("Ładowanie...");
 const customers = ref<any[]>([]);
 const loadingCustomers = ref(false);
 
+// Opiekunowie (Handlowcy + PM)
+const guardians = ref<any[]>([]);
+const loadingGuardians = ref(false);
+
 // Dialog klienta
 const customerDialog = ref(false);
 
 // Dane formularza (BEZ project_number — serwer przydziela automatycznie)
 const defaultForm = () => ({
   customer_id: null as number | null,
+  assigned_to: null as number | null,
   description: "",
   planned_delivery_date: "",
   priority: "normal",
@@ -298,6 +331,14 @@ const priorityOptions = [
 
 const rules = {
   required: (v: any) => !!v || "Pole wymagane",
+};
+
+const roleLabel = (role: string) => {
+  const map: Record<string, string> = {
+    TRADER: "Handlowiec",
+    PROJECT_MANAGER: "Project Manager",
+  };
+  return map[role] ?? role;
 };
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
@@ -322,6 +363,19 @@ const fetchNextNumber = async () => {
     nextNumberPreview.value = "Auto";
   } finally {
     loadingNumber.value = false;
+  }
+};
+
+/** Pobierz listę opiekunów (TRADER + PROJECT_MANAGER) */
+const fetchGuardians = async () => {
+  loadingGuardians.value = true;
+  try {
+    const response = await api.get("/users/for-select");
+    guardians.value = response.data || [];
+  } catch {
+    guardians.value = [];
+  } finally {
+    loadingGuardians.value = false;
   }
 };
 
@@ -391,6 +445,7 @@ const saveProject = async () => {
 
     const data = {
       customer_id: form.value.customer_id,
+      assigned_to: form.value.assigned_to,
       description: form.value.description,
       planned_delivery_date: form.value.planned_delivery_date,
       priority: form.value.priority,
@@ -428,6 +483,7 @@ watch(
     if (newVal) {
       form.value = {
         customer_id: newVal.customer_id || null,
+        assigned_to: newVal.assigned_to || null,
         description: newVal.description || "",
         planned_delivery_date: newVal.planned_delivery_date || "",
         priority: newVal.priority || "normal",
@@ -452,7 +508,7 @@ watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen) {
-      await fetchCustomers();
+      await Promise.all([fetchCustomers(), fetchGuardians()]);
 
       if (!props.project) {
         // Nowy projekt: ustaw domyślne wartości
@@ -463,6 +519,11 @@ watch(
 
         if (props.preselectedCustomerId) {
           form.value.customer_id = props.preselectedCustomerId;
+        }
+
+        // Auto-przypisz zalogowanego użytkownika jako opiekuna
+        if (authStore.user?.id) {
+          form.value.assigned_to = authStore.user.id;
         }
 
         formRef.value?.resetValidation();

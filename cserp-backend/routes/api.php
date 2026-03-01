@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // UŻYTKOWNICY
     // =========================================================================
 
+    Route::get('users/for-select', [UserController::class, 'forSelect']);
     Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive']);
     Route::apiResource('users', UserController::class);
 

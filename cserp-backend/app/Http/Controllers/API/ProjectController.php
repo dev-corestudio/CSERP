@@ -57,7 +57,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Project::with(['customer', 'variants']);
+            $query = Project::with(['customer', 'variants', 'assignedUser']);
 
             // Filtr statusu
             if ($request->filled('status') && $request->input('status') !== 'all') {
@@ -139,6 +139,7 @@ class ProjectController extends Controller
         try {
             $project->load([
                 'customer',
+                'assignedUser',
                 'variants.prototypes',
                 'variants.productionOrder',
                 'variants.approvedQuotation',
@@ -179,10 +180,11 @@ class ProjectController extends Controller
     {
         try {
             $validated = $request->validate([
-                'customer_id' => 'required|exists:customers,id',
-                'description' => 'required|string',
-                'planned_delivery_date' => 'required|date',
-                'priority' => ['nullable', Rule::enum(ProjectPriority::class)],
+                'customer_id'            => 'required|exists:customers,id',
+                'description'            => 'required|string',
+                'planned_delivery_date'  => 'required|date',
+                'priority'               => ['nullable', Rule::enum(ProjectPriority::class)],
+                'assigned_to'            => 'nullable|exists:users,id',
             ]);
 
             DB::beginTransaction();
@@ -196,19 +198,20 @@ class ProjectController extends Controller
             $series = Project::generateSeries($projectNumber);
 
             $project = Project::create([
-                'customer_id' => $validated['customer_id'],
-                'project_number' => $projectNumber,
-                'series' => $series,
-                'description' => $validated['description'],
+                'customer_id'           => $validated['customer_id'],
+                'assigned_to'           => $validated['assigned_to'] ?? $request->user()->id,
+                'project_number'        => $projectNumber,
+                'series'                => $series,
+                'description'           => $validated['description'],
                 'planned_delivery_date' => $validated['planned_delivery_date'],
-                'priority' => $validated['priority'] ?? ProjectPriority::NORMAL,
-                'overall_status' => ProjectOverallStatus::DRAFT,
-                'payment_status' => PaymentStatus::UNPAID,
+                'priority'              => $validated['priority'] ?? ProjectPriority::NORMAL,
+                'overall_status'        => ProjectOverallStatus::DRAFT,
+                'payment_status'        => PaymentStatus::UNPAID,
             ]);
 
             DB::commit();
 
-            $project->load('customer');
+            $project->load(['customer', 'assignedUser']);
 
             return response()->json($project, 201);
 
@@ -242,16 +245,17 @@ class ProjectController extends Controller
     {
         try {
             $validated = $request->validate([
-                'customer_id' => 'sometimes|exists:customers,id',
-                'description' => 'sometimes|string',
+                'customer_id'           => 'sometimes|exists:customers,id',
+                'assigned_to'           => 'sometimes|nullable|exists:users,id',
+                'description'           => 'sometimes|string',
                 'planned_delivery_date' => 'sometimes|date',
-                'priority' => 'sometimes|string|in:low,normal,high,urgent',
-                'overall_status' => 'sometimes|string',
+                'priority'              => 'sometimes|string|in:low,normal,high,urgent,LOW,NORMAL,HIGH,URGENT',
+                'overall_status'        => 'sometimes|string',
             ]);
 
             // project_number i series są niezmieniane — integralność danych
             $project->update($validated);
-            $project->load('customer');
+            $project->load(['customer', 'assignedUser']);
 
             return response()->json($project);
 

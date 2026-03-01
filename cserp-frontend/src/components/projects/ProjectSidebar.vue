@@ -162,6 +162,28 @@
           </div>
         </div>
 
+        <!-- Opiekun projektu -->
+        <div class="detail-row">
+          <div class="label">Opiekun</div>
+          <div class="value">
+            <v-autocomplete
+              :model-value="project.assigned_to"
+              :items="guardians"
+              item-title="name"
+              item-value="id"
+              density="compact"
+              variant="outlined"
+              hide-details
+              :loading="inlineLoading === 'assigned_to' || loadingGuardians"
+              placeholder="Brak"
+              no-data-text="Brak opiekunów"
+              clearable
+              class="status-select"
+              @update:model-value="(val) => $emit('update-inline', 'assigned_to', val)"
+            />
+          </div>
+        </div>
+
         <!-- Data utworzenia (Readonly) -->
         <div class="detail-row">
           <div class="label">Utworzone</div>
@@ -251,10 +273,11 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
+import { ref, onMounted } from "vue";
 import InlineEditField from "@/components/common/InlineEditField.vue";
 import { useMetadataStore } from "@/stores/metadata";
 import { useStatusFormatter } from "@/composables/useStatusFormatter";
+import api from "@/services/api";
 
 const props = defineProps<{
   project: any;
@@ -265,6 +288,23 @@ defineEmits(["update-inline"]);
 
 const metadataStore = useMetadataStore();
 const { formatProjectStatus, formatPaymentStatus, formatPriority } = useStatusFormatter();
+
+const guardians = ref<any[]>([]);
+const loadingGuardians = ref(false);
+
+const fetchGuardians = async () => {
+  loadingGuardians.value = true;
+  try {
+    const { data } = await api.get("/users/for-select");
+    guardians.value = data || [];
+  } catch {
+    guardians.value = [];
+  } finally {
+    loadingGuardians.value = false;
+  }
+};
+
+onMounted(fetchGuardians);
 
 const formatDate = (date: string | null): string | null => {
   if (!date) return null;

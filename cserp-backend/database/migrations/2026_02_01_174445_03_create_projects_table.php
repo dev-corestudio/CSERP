@@ -34,6 +34,9 @@ return new class extends Migration {
             $table->enum('priority', array_column(ProjectPriority::cases(), 'value'))
                 ->default(ProjectPriority::NORMAL->value);
 
+            // Opiekun projektu (Handlowiec lub Project Manager)
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
 
             $table->index(['customer_id', 'overall_status']);

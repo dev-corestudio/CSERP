@@ -17,6 +17,7 @@ class Project extends Model
 
     protected $fillable = [
         'customer_id',
+        'assigned_to',
         'project_number',
         'series',
         'description',
@@ -68,6 +69,14 @@ class Project extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Opiekun projektu (Handlowiec lub Project Manager)
+     */
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     /**

@@ -59,6 +59,22 @@ class UserController extends Controller
     }
 
     /**
+     * Lista użytkowników mogących być opiekunami projektu
+     * (Handlowiec + Project Manager), tylko aktywni.
+     *
+     * GET /api/users/for-select
+     */
+    public function forSelect()
+    {
+        $users = User::whereIn('role', [UserRole::TRADER, UserRole::PROJECT_MANAGER])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'role']);
+
+        return response()->json($users);
+    }
+
+    /**
      * Tworzenie użytkownika
      */
     public function store(Request $request)
