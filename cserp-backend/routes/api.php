@@ -238,7 +238,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('workstations/{workstation}/operators/{user}', [WorkstationController::class, 'removeOperator']);
 
     Route::get('workstations/{workstation}/services', [WorkstationController::class, 'getServices']);
-    Route::post('workstations/{workstation}/services/{assortment}', [WorkstationController::class, 'attachService']);
+    Route::post('workstations/{workstation}/services', [WorkstationController::class, 'attachService']);
     Route::delete('workstations/{workstation}/services/{assortment}', [WorkstationController::class, 'detachService']);
 
     // =========================================================================
