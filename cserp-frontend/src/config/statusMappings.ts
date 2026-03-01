@@ -406,7 +406,3 @@ export const VARIANT_TYPES: StatusMap = {
         icon: 'mdi-factory'
     }
 }
-
-
-
-export const PRIORITIES = ORDER_PRIORITIES

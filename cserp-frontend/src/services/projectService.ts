@@ -1,5 +1,5 @@
 import api from './api'
-import type { Project, ApiResponse, Customer } from '@/types'
+import type { Project, ApiResponse } from '@/types'
 
 export const projectService = {
   // Projects
@@ -40,36 +40,4 @@ export const projectService = {
     await api.delete(`/projects/${id}`)
   },
 
-  // Customers
-  async getCustomers(): Promise<Customer[]> {
-    const response = await api.get<ApiResponse<Customer[]>>('/customers')
-    const data = response.data
-    if (Array.isArray(data)) return data
-    return (data as any).data || []
-  },
-
-  // Variants
-  async getVariants(projectId: number | string): Promise<any[]> {
-    const response = await api.get(`/projects/${projectId}/variants`)
-    const data = response.data
-    if (Array.isArray(data)) return data
-    return (data as any).data || []
-  },
-
-  // Quotations
-  async getQuotations(projectId: number | string): Promise<any[]> {
-    const response = await api.get(`/projects/${projectId}/quotations`)
-    const data = response.data
-    return Array.isArray(data) ? data : (data as any).data || []
-  },
-
-  async createQuotation(projectId: number | string, data: any): Promise<any> {
-    const response = await api.post(`/projects/${projectId}/quotations`, data)
-    return response.data
-  },
-
-  async approveQuotation(quotationId: number | string): Promise<any> {
-    const response = await api.patch(`/quotations/${quotationId}/approve`)
-    return response.data
-  }
 }

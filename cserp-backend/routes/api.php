@@ -18,8 +18,6 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\VariantMaterialController;
 use App\Http\Controllers\API\PrototypeMaterialController;
 use App\Http\Controllers\API\ProjectImageController;
-use App\Http\Controllers\API\ProductionController;
-use App\Http\Controllers\API\DeliveryController;
 
 // =========================================================================
 // PUBLICZNE — bez autoryzacji
@@ -180,30 +178,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('projects/{project}/images', [ProjectImageController::class, 'index']);
     Route::post('projects/{project}/images', [ProjectImageController::class, 'store']);
     Route::delete('project-images/{image}', [ProjectImageController::class, 'destroy']);
-
-    // =========================================================================
-    // PRODUKCJA
-    // =========================================================================
-
-    Route::get('variants/{variant}/production', [ProductionController::class, 'show']);
-    Route::post('variants/{variant}/production', [ProductionController::class, 'store']);
-    Route::get('production/{production}', [ProductionController::class, 'details']);
-    Route::put('production/{production}', [ProductionController::class, 'update']);
-    Route::get('production/{production}/services', [ProductionController::class, 'services']);
-    Route::post('production/{production}/services', [ProductionController::class, 'addService']);
-    Route::put('production-services/{service}', [ProductionController::class, 'updateService']);
-    Route::delete('production-services/{service}', [ProductionController::class, 'deleteService']);
-
-    // =========================================================================
-    // DOSTAWY
-    // =========================================================================
-
-    Route::get('variants/{variant}/deliveries', [DeliveryController::class, 'index']);
-    Route::post('variants/{variant}/deliveries', [DeliveryController::class, 'store']);
-    Route::get('deliveries/{delivery}', [DeliveryController::class, 'show']);
-    Route::put('deliveries/{delivery}', [DeliveryController::class, 'update']);
-    Route::patch('deliveries/{delivery}/complete', [DeliveryController::class, 'complete']);
-    Route::delete('deliveries/{delivery}', [DeliveryController::class, 'destroy']);
 
     // =========================================================================
     // RCP — Panel pracownika produkcyjnego
