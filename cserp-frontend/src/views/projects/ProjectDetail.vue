@@ -40,11 +40,11 @@
           <v-btn
             color="deep-purple"
             variant="outlined"
-            prepend-icon="mdi-layers-plus"
+            prepend-icon="mdi-layers"
             class="mr-2"
-            @click="openCreateSeriesDialog"
+            @click="seriesDialog = true"
           >
-            Nowa seria
+            Serie
           </v-btn>
           <v-btn prepend-icon="mdi-pencil" color="primary" @click="openEditProject">
             Edytuj
@@ -59,13 +59,6 @@
         <v-col cols="12" md="8">
           <!-- Opis projektu -->
           <project-description :description="project.description" />
-
-          <!-- Podsumowanie finansowe -->
-          <project-financial-summary
-            class="mt-6"
-            :financial-summary="financialSummary"
-            :loading="loadingFinancial"
-          />
 
           <!-- Lista grup i wariantów -->
           <project-variants-grid
@@ -85,16 +78,7 @@
         <!-- PRAWA KOLUMNA (4) – panel serii + sidebar                    -->
         <!-- ============================================================ -->
         <v-col cols="12" md="4">
-          <!-- Panel serii projektu -->
-          <series-list-panel
-            ref="seriesPanelRef"
-            :current-project-id="project.id"
-            :project-number="project.project_number"
-            class="mb-4"
-            @create-series="openCreateSeriesDialog"
-          />
-
-          <!-- Szczegóły + Klient -->
+            <!-- Szczegóły + Klient -->
           <project-sidebar
             :project="project"
             :inline-loading="inlineLoading"
@@ -160,6 +144,19 @@
       @saved="handleSeriesCreated"
     />
 
+    <!-- Dialog serii projektu -->
+    <v-dialog v-model="seriesDialog" max-width="600" scrollable>
+      <series-list-panel
+        v-if="seriesDialog"
+        ref="seriesPanelRef"
+        :current-project-id="project?.id"
+        :project-number="project?.project_number"
+        :closable="true"
+        @create-series="openCreateSeriesDialog"
+        @close="seriesDialog = false"
+      />
+    </v-dialog>
+
     <!-- Snackbar powiadomień -->
     <v-snackbar
       v-model="snackbar.show"
@@ -190,7 +187,6 @@ import PageHeader from "@/components/layout/PageHeader.vue";
 import ProjectDescription from "@/components/projects/ProjectDescription.vue";
 import ProjectVariantsGrid from "@/components/projects/ProjectVariantsGrid.vue";
 import ProjectSidebar from "@/components/projects/ProjectSidebar.vue";
-import ProjectFinancialSummary from "@/components/projects/ProjectFinancialSummary.vue";
 
 // Dialogi
 import VariantFormDialog from "@/components/projects/VariantFormDialog.vue";
@@ -213,11 +209,9 @@ const seriesPanelRef = ref<InstanceType<typeof SeriesListPanel> | null>(null);
 // ─── Stan główny ──────────────────────────────────────────────────────────────
 
 const loading = ref(true);
-const loadingFinancial = ref(false);
 const error = ref<string | null>(null);
 const project = ref<any>(null);
 const inlineLoading = ref<string | null>(null);
-const financialSummary = ref<any>(null);
 
 // ─── Stan — dialogi wariantów ─────────────────────────────────────────────────
 
@@ -249,6 +243,7 @@ const duplicatingVariant = ref<any>(null);
 
 const editProjectDialog = ref(false);
 const createSeriesDialog = ref(false);
+const seriesDialog = ref(false);
 
 // ─── Snackbar ─────────────────────────────────────────────────────────────────
 
@@ -292,26 +287,9 @@ async function fetchProject() {
   }
 }
 
-/** Pobiera podsumowanie finansowe oddzielnym zapytaniem (może być wolniejsze) */
-async function fetchFinancialSummary() {
-  if (!project.value?.id) return;
-  loadingFinancial.value = true;
-  try {
-    const res = await api.get(`/projects/${project.value.id}/financial-summary`);
-    financialSummary.value = res.data;
-  } catch {
-    // Nieblokujące — podsumowanie może być niedostępne
-    financialSummary.value = null;
-  } finally {
-    loadingFinancial.value = false;
-  }
-}
-
-/** Pełna inicjalizacja — projekt + finanse (finanse nie blokują) */
+/** Pełna inicjalizacja — projekt */
 async function init() {
   await fetchProject();
-  // Ładuj finanse równolegle po załadowaniu projektu, nie blokując UI
-  fetchFinancialSummary();
 }
 
 // ─── Inline update (sidebar) ──────────────────────────────────────────────────

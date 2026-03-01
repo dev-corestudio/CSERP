@@ -36,6 +36,14 @@
         >
           Dodaj
         </v-btn>
+        <v-btn
+          v-if="closable"
+          size="small"
+          color="white"
+          variant="text"
+          icon="mdi-close"
+          @click="$emit('close')"
+        />
       </template>
     </v-card-title>
 
@@ -127,11 +135,14 @@ const props = defineProps<{
   currentProjectId: number;
   /** Numer projektu do wyświetlenia (np. "P/0001") */
   projectNumber?: string;
+  /** Czy pokazać przycisk zamknięcia (gdy panel jest w modalu) */
+  closable?: boolean;
 }>();
 
 const emit = defineEmits<{
   "create-series": [];
   "series-changed": [projectId: number];
+  "close": [];
 }>();
 
 // ─── Instancje ────────────────────────────────────────────────────────────────
