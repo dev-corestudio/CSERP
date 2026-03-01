@@ -143,7 +143,7 @@ class VariantController extends Controller
             'type'             => $validated['type'],
             'description'      => $validated['description'] ?? null,
             'status'           => VariantStatus::DRAFT,
-            'priority'         => $validated['priority'] ?? ProjectPriority::NORMAL,
+            'priority'         => $validated['priority'] ?? $project->priority ?? ProjectPriority::NORMAL,
             'is_approved'      => false,
         ]);
 
