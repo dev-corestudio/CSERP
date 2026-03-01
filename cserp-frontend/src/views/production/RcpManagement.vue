@@ -104,12 +104,19 @@
             />
           </v-col>
 
-          <!-- Reset -->
+          <!-- Reset / Odśwież -->
           <v-col cols="12" md="6" class="d-flex justify-end align-center gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
                 <v-btn v-bind="props" icon variant="text" @click="resetFilters">
                   <v-icon>mdi-filter-remove</v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
+            <v-tooltip text="Odśwież" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon variant="text" :loading="rcpAdminStore.loading" @click="applyFilters">
+                  <v-icon>mdi-refresh</v-icon>
                 </v-btn>
               </template>
             </v-tooltip>

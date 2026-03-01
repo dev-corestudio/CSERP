@@ -57,6 +57,13 @@
                 </v-btn>
               </template>
             </v-tooltip>
+            <v-tooltip text="Odśwież" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon variant="text" :loading="loading" @click="fetchData">
+                  <v-icon>mdi-refresh</v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
             <v-btn-toggle
               v-model="filters.quick_filter"
               variant="outlined"

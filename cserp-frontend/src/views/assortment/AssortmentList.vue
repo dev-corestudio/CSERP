@@ -77,11 +77,18 @@
             />
           </v-col>
 
-          <v-col cols="12" md="2" class="d-flex justify-end">
+          <v-col cols="12" md="2" class="d-flex justify-end gap-1">
             <v-tooltip text="Resetuj filtry" location="top">
               <template v-slot:activator="{ props }">
                 <v-btn v-bind="props" icon variant="text" @click="resetFilters">
                   <v-icon>mdi-filter-remove</v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
+            <v-tooltip text="Odśwież" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon variant="text" :loading="loading" @click="fetchData">
+                  <v-icon>mdi-refresh</v-icon>
                 </v-btn>
               </template>
             </v-tooltip>
