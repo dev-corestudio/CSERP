@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { variantService } from '@/services/variantService'
+import { useSharedApiState } from '@/composables/useApiAction'
 import type { Variant } from '@/types'
 
 export const useVariantsStore = defineStore('variants', () => {
@@ -11,9 +12,7 @@ export const useVariantsStore = defineStore('variants', () => {
   /** Płaska lista wszystkich elementów (grupy + warianty) dla zamówienia */
   const variants = ref<Variant[]>([])
   const currentVariant = ref<Variant | null>(null)
-  const prototypes = ref<any[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+  const { loading, error, wrapAction } = useSharedApiState()
 
   // =========================================================================
   // COMPUTED — PODZIAŁ NA GRUPY I WARIANTY
@@ -40,37 +39,16 @@ export const useVariantsStore = defineStore('variants', () => {
   // =========================================================================
 
   /** Pobierz wszystkie elementy (grupy + warianty) dla zamówienia */
-  const fetchVariants = async (orderId: number | string) => {
-    loading.value = true
-    error.value = null
-    try {
-      const response = await variantService.getAll(orderId)
-      variants.value = response
-    } catch (err: any) {
-      console.error('Fetch variants error:', err)
-      error.value = err.response?.data?.message || 'Błąd pobierania wariantów'
-      variants.value = []
-    } finally {
-      loading.value = false
-    }
-  }
+  const fetchVariants = wrapAction(async (orderId: number | string) => {
+    variants.value = await variantService.getAll(orderId)
+  }, 'Błąd pobierania wariantów')
 
   /** Pobierz szczegóły pojedynczego elementu (grupy lub wariantu) */
-  const fetchVariant = async (id: number | string) => {
-    loading.value = true
-    error.value = null
-    try {
-      const response = await variantService.getById(id)
-      currentVariant.value = response
-      return currentVariant.value
-    } catch (err: any) {
-      console.error('Fetch variant error:', err)
-      error.value = err.response?.data?.message || 'Błąd pobierania wariantu'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
+  const fetchVariant = wrapAction(async (id: number | string) => {
+    const response = await variantService.getById(id)
+    currentVariant.value = response
+    return currentVariant.value
+  }, 'Błąd pobierania wariantu')
 
   // =========================================================================
   // TWORZENIE
@@ -80,30 +58,20 @@ export const useVariantsStore = defineStore('variants', () => {
    * Utwórz nową GRUPĘ dla zamówienia.
    * Backend automatycznie nadaje kolejną literę (A, B, C...) i ustawia quantity=0.
    */
-  const createGroup = async (
+  const createGroup = wrapAction(async (
     orderId: number | string,
     data: { name: string; description?: string }
   ) => {
-    loading.value = true
-    error.value = null
-    try {
-      const newGroup = await variantService.createGroup(orderId, data)
-      variants.value.push(newGroup)
-      return newGroup
-    } catch (err: any) {
-      console.error('Create group error:', err)
-      error.value = err.response?.data?.message || 'Błąd tworzenia grupy'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
+    const newGroup = await variantService.createGroup(orderId, data)
+    variants.value.push(newGroup)
+    return newGroup
+  }, 'Błąd tworzenia grupy')
 
   /**
    * Utwórz WARIANT jako dziecko grupy lub wariantu.
    * Backend nadaje numer: A → A1, A2; A1 → A1_1, A1_2.
    */
-  const createChildVariant = async (
+  const createChildVariant = wrapAction(async (
     orderId: number | string,
     parentId: number | string,
     data: {
@@ -114,78 +82,43 @@ export const useVariantsStore = defineStore('variants', () => {
       priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
     }
   ) => {
-    loading.value = true
-    error.value = null
-    try {
-      const newVariant = await variantService.createChild(orderId, parentId, data)
-      variants.value.push(newVariant)
-      return newVariant
-    } catch (err: any) {
-      console.error('Create child variant error:', err)
-      error.value = err.response?.data?.message || 'Błąd tworzenia wariantu'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
+    const newVariant = await variantService.createChild(orderId, parentId, data)
+    variants.value.push(newVariant)
+    return newVariant
+  }, 'Błąd tworzenia wariantu')
 
   // =========================================================================
   // EDYCJA
   // =========================================================================
 
   /** Zaktualizuj grupę lub wariant */
-  const updateVariant = async (id: number | string, data: Partial<Variant>) => {
-    loading.value = true
-    error.value = null
-    try {
-      const updated = await variantService.update(id, data)
+  const updateVariant = wrapAction(async (id: number | string, data: Partial<Variant>) => {
+    const updated = await variantService.update(id, data)
 
-      // Aktualizuj w liście
-      if (Array.isArray(variants.value)) {
-        const index = variants.value.findIndex(l => l.id === Number(id))
-        if (index !== -1) variants.value[index] = updated
-      }
+    const index = variants.value.findIndex(l => l.id === Number(id))
+    if (index !== -1) variants.value[index] = updated
 
-      // Aktualizuj bieżący jeśli to on
-      if (currentVariant.value?.id === Number(id)) {
-        currentVariant.value = updated
-      }
-
-      return updated
-    } catch (err: any) {
-      console.error('Update variant error:', err)
-      error.value = err.response?.data?.message || 'Błąd aktualizacji'
-      throw err
-    } finally {
-      loading.value = false
+    if (currentVariant.value?.id === Number(id)) {
+      currentVariant.value = updated
     }
-  }
+
+    return updated
+  }, 'Błąd aktualizacji')
 
   /** Zmień status wariantu (nie dot. grup) */
-  const updateStatus = async (id: number | string, status: string) => {
-    loading.value = true
-    error.value = null
-    try {
-      const updated = await variantService.updateStatus(id, status)
+  const updateStatus = wrapAction(async (id: number | string, status: string) => {
+    const updated = await variantService.updateStatus(id, status)
 
-      if (Array.isArray(variants.value)) {
-        const numId = Number(id)
-        const index = variants.value.findIndex(l => l.id === numId)
-        if (index !== -1) variants.value[index] = updated
-      }
-      if (currentVariant.value?.id === Number(id)) {
-        currentVariant.value = updated
-      }
+    const numId = Number(id)
+    const index = variants.value.findIndex(l => l.id === numId)
+    if (index !== -1) variants.value[index] = updated
 
-      return updated
-    } catch (err: any) {
-      console.error('Update status error:', err)
-      error.value = err.response?.data?.message || 'Błąd zmiany statusu'
-      throw err
-    } finally {
-      loading.value = false
+    if (currentVariant.value?.id === numId) {
+      currentVariant.value = updated
     }
-  }
+
+    return updated
+  }, 'Błąd zmiany statusu')
 
   // =========================================================================
   // USUWANIE
@@ -197,61 +130,42 @@ export const useVariantsStore = defineStore('variants', () => {
    * @param id     - ID elementu
    * @param force  - Wymagane dla grup z dziećmi (kasuje całe drzewo rekurencyjnie)
    */
-  const deleteVariant = async (id: number | string, force = false) => {
-    loading.value = true
-    error.value = null
-    try {
-      await variantService.delete(id, force)
+  const deleteVariant = wrapAction(async (id: number | string, force = false) => {
+    await variantService.delete(id, force)
 
-      // Usuń z listy — przy force=true usuń też wszystkich potomków
-      if (force) {
-        // Rekurencyjnie wyznacz ID wszystkich potomków
-        const toRemove = new Set<number>()
-        const collectDescendants = (parentId: number) => {
-          toRemove.add(parentId)
-          variants.value
-            .filter(v => v.parent_variant_id === parentId)
-            .forEach(child => collectDescendants(child.id))
-        }
-        collectDescendants(Number(id))
-        variants.value = variants.value.filter(v => !toRemove.has(v.id))
-      } else {
-        const numId = Number(id)
-        variants.value = variants.value.filter(l => l.id !== numId)
+    if (force) {
+      // Rekurencyjnie wyznacz ID wszystkich potomków
+      const toRemove = new Set<number>()
+      const collectDescendants = (parentId: number) => {
+        toRemove.add(parentId)
+        variants.value
+          .filter(v => v.parent_variant_id === parentId)
+          .forEach(child => collectDescendants(child.id))
       }
-    } catch (err: any) {
-      console.error('Delete variant error:', err)
-      error.value = err.response?.data?.message || 'Błąd usuwania'
-      throw err
-    } finally {
-      loading.value = false
+      collectDescendants(Number(id))
+      variants.value = variants.value.filter(v => !toRemove.has(v.id))
+    } else {
+      const numId = Number(id)
+      variants.value = variants.value.filter(l => l.id !== numId)
     }
-  }
+  }, 'Błąd usuwania')
 
   // =========================================================================
   // RECENZJA PROTOTYPU
   // =========================================================================
 
   /** Zatwierdź lub odrzuć prototyp z opcjonalnym feedbackiem */
-  const reviewPrototype = async (
+  const reviewPrototype = wrapAction(async (
     id: number | string,
     action: 'approve' | 'reject',
     feedback: string
   ) => {
-    loading.value = true
-    try {
-      const updated = await variantService.reviewPrototype(id, action, feedback)
-      if (currentVariant.value?.id === Number(id)) {
-        currentVariant.value = updated
-      }
-      return updated
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Błąd recenzji prototypu'
-      throw err
-    } finally {
-      loading.value = false
+    const updated = await variantService.reviewPrototype(id, action, feedback)
+    if (currentVariant.value?.id === Number(id)) {
+      currentVariant.value = updated
     }
-  }
+    return updated
+  }, 'Błąd recenzji prototypu')
 
   // =========================================================================
   // POMOCNICZE
@@ -267,7 +181,6 @@ export const useVariantsStore = defineStore('variants', () => {
     // Stan
     variants,
     currentVariant,
-    prototypes,
     loading,
     error,
 

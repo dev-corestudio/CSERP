@@ -4,8 +4,8 @@
     <v-card-title class="bg-deep-purple-darken-1 text-white d-flex align-center pa-3">
       <v-icon start color="white" size="small">mdi-layers</v-icon>
       <span class="text-body-1 font-weight-bold">
-        Serie projektu
-        <span class="text-body-2 opacity-70 ml-1">{{ projectNumber }}</span>
+        {{ mode === 'order' ? 'Serie zamówienia' : 'Serie projektu' }}
+        <span class="text-body-2 opacity-70 ml-1">{{ entityNumber }}</span>
       </span>
       <v-spacer />
       <v-progress-circular
@@ -70,8 +70,8 @@
           v-for="serie in series"
           :key="serie.id"
           :class="{
-            'current-series': serie.id === currentProjectId,
-            'other-series': serie.id !== currentProjectId,
+            'current-series': serie.id === currentId,
+            'other-series': serie.id !== currentId,
           }"
           class="series-item px-3 py-2"
           @click="navigateToSeries(serie)"
@@ -81,7 +81,7 @@
             <span
               class="text-caption font-weight-bold mr-4"
               :class="
-                serie.id === currentProjectId ? 'text-deep-purple' : 'text-grey-darken-2'
+                serie.id === currentId ? 'text-deep-purple' : 'text-grey-darken-2'
               "
             >
               #{{ serie.series }}
@@ -90,7 +90,7 @@
 
           <!-- Treść -->
           <v-list-item-title class="text-body-2">
-            <span class="font-weight-bold">{{ serie.full_project_number }}</span>
+            <span class="font-weight-bold">{{ fullEntityNumber(serie) }}</span>
           </v-list-item-title>
           <v-list-item-subtitle class="text-caption">
             <span v-if="serie.description" class="text-truncate">
@@ -131,17 +131,19 @@ import { useMetadataStore } from "@/stores/metadata";
 // ─── Props / Emits ────────────────────────────────────────────────────────────
 
 const props = defineProps<{
-  /** ID aktualnie wyświetlanego projektu */
-  currentProjectId: number;
-  /** Numer projektu do wyświetlenia (np. "P/0001") */
-  projectNumber?: string;
+  /** Tryb: zamówienie lub projekt */
+  mode: "order" | "project";
+  /** ID aktualnie wyświetlanego zamówienia / projektu */
+  currentId: number;
+  /** Numer do wyświetlenia w nagłówku (np. "Z/0001" lub "P/0001") */
+  entityNumber?: string;
   /** Czy pokazać przycisk zamknięcia (gdy panel jest w modalu) */
   closable?: boolean;
 }>();
 
 const emit = defineEmits<{
   "create-series": [];
-  "series-changed": [projectId: number];
+  "series-changed": [id: number];
   "close": [];
 }>();
 
@@ -162,7 +164,7 @@ onMounted(() => {
 });
 
 watch(
-  () => props.currentProjectId,
+  () => props.currentId,
   () => {
     loadSeries();
   }
@@ -174,7 +176,7 @@ watch(
 const loadSeries = async () => {
   loading.value = true;
   try {
-    series.value = await seriesService.getAllSeries(props.currentProjectId);
+    series.value = await seriesService.getAllSeries(props.currentId);
   } catch (err) {
     console.error("Błąd ładowania serii:", err);
     series.value = [];
@@ -185,21 +187,30 @@ const loadSeries = async () => {
 
 /** Nawiguj do innej serii */
 const navigateToSeries = (serie: SeriesListItem) => {
-  if (serie.id === props.currentProjectId) return;
+  if (serie.id === props.currentId) return;
   emit("series-changed", serie.id);
-  router.push(`/projects/${serie.id}`);
+  router.push(`/${props.mode === "order" ? "orders" : "projects"}/${serie.id}`);
 };
 
-/** Kolor statusu projektu */
+/** Pełny numer serii zależny od trybu */
+const fullEntityNumber = (serie: SeriesListItem): string =>
+  props.mode === "order"
+    ? (serie as any).full_order_number
+    : (serie as any).full_project_number;
+
+/** Klucz grupy statusów w metadanych */
+const statusGroupName = () =>
+  props.mode === "order" ? "orderStatuses" : "projectStatuses";
+
+/** Kolor statusu */
 const getStatusColor = (status: string): string => {
-  const config = metadataStore.getConfig("projectStatuses", status);
+  const config = metadataStore.getConfig(statusGroupName(), status);
   return config?.color || "grey";
 };
 
-/** Etykieta statusu projektu */
-const getStatusLabel = (status: string): string => {
-  return metadataStore.getLabel("projectStatuses", status);
-};
+/** Etykieta statusu */
+const getStatusLabel = (status: string): string =>
+  metadataStore.getLabel(statusGroupName(), status);
 
 /** Formatuj datę jako DD.MM.YYYY */
 const formatDate = (dateStr: string): string => {

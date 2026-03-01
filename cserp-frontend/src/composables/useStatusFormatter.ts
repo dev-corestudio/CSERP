@@ -10,10 +10,11 @@ export function useStatusFormatter() {
     const metadataStore = useMetadataStore()
 
     const format = (groupName: string, value: string): FormattedStatus => {
+        const config = metadataStore.getConfig(groupName, value)
         return {
-            label: metadataStore.getLabel(groupName, value),
-            color: metadataStore.getColor(groupName, value),
-            icon: metadataStore.getIcon(groupName, value)
+            label: config?.label ?? (value || '-'),
+            color: config?.color ?? 'grey',
+            icon: config?.icon ?? 'mdi-circle-small',
         }
     }
 

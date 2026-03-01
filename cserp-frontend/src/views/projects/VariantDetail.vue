@@ -156,7 +156,7 @@ import VariantMaterialsTab from "@/components/materials/VariantMaterialsTab.vue"
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog.vue";
 import QuotationDetailsDialog from "@/components/quotations/QuotationDetailsDialog.vue";
 import QuotationExportMaterialsDialog from "@/components/quotations/QuotationExportMaterialsDialog.vue";
-import VariantFormDialog from "@/components/projects/VariantFormDialog.vue";
+import VariantFormDialog from "@/components/variants/VariantFormDialog.vue";
 
 // Inicjalizacja i sklepy
 const route = useRoute();

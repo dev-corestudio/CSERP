@@ -307,8 +307,8 @@ const props = defineProps<{
    */
   mode: "group" | "variant" | "edit-group" | "edit-variant";
 
-  /** ID projektu (wymagane przy tworzeniu) */
-  projectId?: number;
+  /** ID encji (zamówienia lub projektu) — wymagane przy tworzeniu */
+  entityId?: number;
 
   /**
    * Rodzic, do którego dodajemy wariant (wymagane gdy mode='variant').
@@ -481,12 +481,12 @@ const handleSubmit = async () => {
   loading.value = true;
   try {
     if (isGroupMode.value) {
-      await variantsStore.createGroup(props.projectId!, {
+      await variantsStore.createGroup(props.entityId!, {
         name: form.value.name,
         description: form.value.description || undefined,
       });
     } else if (isVariantMode.value) {
-      await variantsStore.createChildVariant(props.projectId!, props.parent!.id, {
+      await variantsStore.createChildVariant(props.entityId!, props.parent!.id, {
         name: form.value.name,
         quantity: form.value.quantity,
         type: form.value.type,

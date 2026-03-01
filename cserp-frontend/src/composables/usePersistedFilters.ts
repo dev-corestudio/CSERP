@@ -11,28 +11,21 @@
  */
 import { ref, watch, type Ref } from "vue";
 
+function mergeWithDefaults<T>(defaults: T, override?: any): T {
+    if (typeof defaults === "object" && defaults !== null && !Array.isArray(defaults)) {
+        return { ...(defaults as any), ...(override ?? {}) } as T;
+    }
+    return override !== undefined ? override : defaults;
+}
+
 export function usePersistedFilters<T>(storageKey: string, defaults: T): Ref<T> {
     let initial: T;
     try {
         const stored = localStorage.getItem(storageKey);
-        if (stored !== null) {
-            const parsed = JSON.parse(stored);
-            // Scalaj z defaults, żeby nowe pola (dodane po zapisie) miały wartości domyślne
-            initial =
-                typeof defaults === "object" && defaults !== null && !Array.isArray(defaults)
-                    ? { ...(defaults as any), ...(parsed as any) }
-                    : parsed;
-        } else {
-            initial =
-                typeof defaults === "object" && defaults !== null && !Array.isArray(defaults)
-                    ? { ...(defaults as any) }
-                    : defaults;
-        }
+        // Scalaj z defaults, żeby nowe pola (dodane po zapisie) miały wartości domyślne
+        initial = stored !== null ? mergeWithDefaults(defaults, JSON.parse(stored)) : mergeWithDefaults(defaults);
     } catch {
-        initial =
-            typeof defaults === "object" && defaults !== null && !Array.isArray(defaults)
-                ? { ...(defaults as any) }
-                : defaults;
+        initial = mergeWithDefaults(defaults);
     }
 
     const state = ref<T>(initial) as Ref<T>;

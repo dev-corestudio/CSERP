@@ -88,8 +88,9 @@
           <!-- Panel serii zamówienia -->
           <series-list-panel
             ref="seriesPanelRef"
-            :current-order-id="order.id"
-            :order-number="order.order_number"
+            mode="order"
+            :current-id="order.id"
+            :entity-number="order.order_number"
             class="mb-4"
             @create-series="openCreateSeriesDialog"
           />
@@ -119,7 +120,7 @@
     <variant-form-dialog
       v-model="variantDialog"
       :mode="variantDialogMode"
-      :order-id="order?.id"
+      :entity-id="order?.id"
       :parent="variantDialogParent"
       :item="variantDialogItem"
       :existing-variants="order?.variants || []"
@@ -188,15 +189,15 @@ import { useVariantsStore } from "@/stores/variants";
 // Komponenty layout
 import PageHeader from "@/components/layout/PageHeader.vue";
 import OrderDescription from "@/components/orders/OrderDescription.vue";
-import OrderVariantsGrid from "@/components/orders/OrderVariantsGrid.vue";
+import OrderVariantsGrid from "@/components/variants/VariantsGrid.vue";
 import OrderSidebar from "@/components/orders/OrderSidebar.vue";
 import OrderFinancialSummary from "@/components/orders/OrderFinancialSummary.vue";
 
 // Dialogi
-import VariantFormDialog from "@/components/orders/VariantFormDialog.vue";
-import VariantDuplicateDialog from "@/components/orders/VariantDuplicateDialog.vue";
+import VariantFormDialog from "@/components/variants/VariantFormDialog.vue";
+import VariantDuplicateDialog from "@/components/variants/VariantDuplicateDialog.vue";
 import OrderFormDialog from "@/components/orders/OrderFormDialog.vue";
-import SeriesListPanel from "@/components/orders/SeriesListPanel.vue";
+import SeriesListPanel from "@/components/common/SeriesListPanel.vue";
 import CreateSeriesDialog from "@/components/orders/CreateSeriesDialog.vue";
 
 // ─── Instancje ────────────────────────────────────────────────────────────────

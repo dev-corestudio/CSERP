@@ -103,7 +103,7 @@
     <variant-form-dialog
       v-model="variantDialog"
       :mode="variantDialogMode"
-      :project-id="project?.id"
+      :entity-id="project?.id"
       :parent="variantDialogParent"
       :item="variantDialogItem"
       :existing-variants="project?.variants || []"
@@ -149,8 +149,9 @@
       <series-list-panel
         v-if="seriesDialog"
         ref="seriesPanelRef"
-        :current-project-id="project?.id"
-        :project-number="project?.project_number"
+        mode="project"
+        :current-id="project?.id"
+        :entity-number="project?.project_number"
         :closable="true"
         @create-series="openCreateSeriesDialog"
         @close="seriesDialog = false"
@@ -186,14 +187,14 @@ import { useVariantsStore } from "@/stores/variants";
 // Komponenty layout
 import PageHeader from "@/components/layout/PageHeader.vue";
 import ProjectDescription from "@/components/projects/ProjectDescription.vue";
-import ProjectVariantsGrid from "@/components/projects/ProjectVariantsGrid.vue";
+import ProjectVariantsGrid from "@/components/variants/VariantsGrid.vue";
 import ProjectSidebar from "@/components/projects/ProjectSidebar.vue";
 
 // Dialogi
-import VariantFormDialog from "@/components/projects/VariantFormDialog.vue";
-import VariantDuplicateDialog from "@/components/projects/VariantDuplicateDialog.vue";
+import VariantFormDialog from "@/components/variants/VariantFormDialog.vue";
+import VariantDuplicateDialog from "@/components/variants/VariantDuplicateDialog.vue";
 import ProjectFormDialog from "@/components/projects/ProjectFormDialog.vue";
-import SeriesListPanel from "@/components/projects/SeriesListPanel.vue";
+import SeriesListPanel from "@/components/common/SeriesListPanel.vue";
 import CreateSeriesDialog from "@/components/projects/CreateSeriesDialog.vue";
 
 // ─── Instancje ────────────────────────────────────────────────────────────────

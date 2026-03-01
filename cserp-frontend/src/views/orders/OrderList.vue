@@ -132,7 +132,7 @@
           <span v-else class="text-medium-emphasis">-</span>
         </template>
 
-        <template v-slot:item.status="{ item }">
+        <template v-slot:item.overall_status="{ item }">
           <v-chip
             size="small"
             :color="formatOrderStatus(item.overall_status).color"

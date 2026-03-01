@@ -219,6 +219,8 @@ export const formatCurrency = (value: number | string | null | undefined): strin
     return new Intl.NumberFormat('pl-PL', {
         style: 'currency',
         currency: 'PLN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
     }).format(num)
 }
 
