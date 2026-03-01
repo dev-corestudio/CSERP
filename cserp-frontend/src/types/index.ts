@@ -15,12 +15,13 @@ export interface Customer {
     address?: string;
     is_active: boolean;
     stats?: {
-        total_orders: number;
-        active_orders: number;
-        completed_orders: number;
+        total_projects: number;
+        active_projects: number;
+        completed_projects: number;
+        cancelled_projects: number;
         total_budget: number;
-        paid_orders: number;
-        unpaid_orders: number;
+        paid_projects: number;
+        unpaid_projects: number;
     };
 }
 

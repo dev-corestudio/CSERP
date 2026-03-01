@@ -142,7 +142,7 @@
                 <v-col cols="6">
                   <div class="text-center pa-3 rounded bg-blue-lighten-5">
                     <div class="text-h4 font-weight-bold text-blue">
-                      {{ customer.stats?.total_orders || 0 }}
+                      {{ customer.stats?.total_projects || 0 }}
                     </div>
                     <div class="text-caption">Wszystkich projektów</div>
                   </div>
@@ -150,7 +150,7 @@
                 <v-col cols="6">
                   <div class="text-center pa-3 rounded bg-orange-lighten-5">
                     <div class="text-h4 font-weight-bold text-orange">
-                      {{ customer.stats?.active_orders || 0 }}
+                      {{ customer.stats?.active_projects || 0 }}
                     </div>
                     <div class="text-caption">Aktywnych</div>
                   </div>
@@ -158,7 +158,7 @@
                 <v-col cols="6">
                   <div class="text-center pa-3 rounded bg-green-lighten-5">
                     <div class="text-h4 font-weight-bold text-green">
-                      {{ customer.stats?.completed_orders || 0 }}
+                      {{ customer.stats?.completed_projects || 0 }}
                     </div>
                     <div class="text-caption">Zakończonych</div>
                   </div>
@@ -166,7 +166,7 @@
                 <v-col cols="6">
                   <div class="text-center pa-3 rounded bg-red-lighten-5">
                     <div class="text-h4 font-weight-bold text-red">
-                      {{ customer.stats?.cancelled_orders || 0 }}
+                      {{ customer.stats?.cancelled_projects || 0 }}
                     </div>
                     <div class="text-caption">Anulowanych</div>
                   </div>
@@ -180,13 +180,13 @@
               <div class="d-flex justify-space-between mb-1">
                 <span class="text-body-2">Opłacone:</span>
                 <v-chip size="x-small" color="success">{{
-                  customer.stats?.paid_orders || 0
+                  customer.stats?.paid_projects || 0
                 }}</v-chip>
               </div>
               <div class="d-flex justify-space-between">
                 <span class="text-body-2">Nieopłacone:</span>
                 <v-chip size="x-small" color="warning">{{
-                  customer.stats?.unpaid_orders || 0
+                  customer.stats?.unpaid_projects || 0
                 }}</v-chip>
               </div>
             </v-card-text>

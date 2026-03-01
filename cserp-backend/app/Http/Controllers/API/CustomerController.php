@@ -160,12 +160,12 @@ class CustomerController extends Controller
             $allProjects = $customer->projects;
 
             $stats = [
-                'total_orders' => $allProjects->count(),
-                'active_orders' => $allProjects->whereNotIn('overall_status', ['completed', 'cancelled'])->count(),
-                'completed_orders' => $allProjects->where('overall_status', 'completed')->count(),
-                'cancelled_orders' => $allProjects->where('overall_status', 'cancelled')->count(),
-                'paid_orders' => $allProjects->where('payment_status', 'paid')->count(),
-                'unpaid_orders' => $allProjects->whereIn('payment_status', ['unpaid', 'partial'])->count(),
+                'total_projects' => $allProjects->count(),
+                'active_projects' => $allProjects->whereNotIn('overall_status', ['completed', 'cancelled'])->count(),
+                'completed_projects' => $allProjects->where('overall_status', 'completed')->count(),
+                'cancelled_projects' => $allProjects->where('overall_status', 'cancelled')->count(),
+                'paid_projects' => $allProjects->where('payment_status', 'paid')->count(),
+                'unpaid_projects' => $allProjects->whereIn('payment_status', ['unpaid', 'partial'])->count(),
             ];
 
             $customer->stats = $stats;
@@ -294,7 +294,7 @@ class CustomerController extends Controller
             $row = DB::table('projects')
                 ->where('customer_id', $customer->id)
                 ->selectRaw('
-                    COUNT(*) as total_orders,
+                    COUNT(*) as total_projects,
 
                     COUNT(CASE WHEN overall_status = ? THEN 1 END) as status_draft,
                     COUNT(CASE WHEN overall_status = ? THEN 1 END) as status_quotation,
@@ -327,8 +327,8 @@ class CustomerController extends Controller
                 ->first();
 
             $stats = [
-                'total_orders' => (int) $row->total_orders,
-                'orders_by_status' => [
+                'total_projects' => (int) $row->total_projects,
+                'projects_by_status' => [
                     'brief' => (int) $row->status_draft,
                     'quotation' => (int) $row->status_quotation,
                     'prototype' => (int) $row->status_prototype,
@@ -343,8 +343,8 @@ class CustomerController extends Controller
                     'unpaid' => (int) $row->payment_unpaid,
                     'overdue' => (int) $row->payment_overdue,
                 ],
-                'first_order_date' => $row->first_order_date,
-                'last_order_date' => $row->last_order_date,
+                'first_project_date' => $row->first_order_date,
+                'last_project_date' => $row->last_order_date,
             ];
 
             return response()->json([

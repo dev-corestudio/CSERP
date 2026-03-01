@@ -1,7 +1,7 @@
 <template>
   <page-header
     :title="variant ? variant.name : 'Ładowanie...'"
-    :subtitle="variant?.order?.full_order_number || ''"
+    :subtitle="variant?.project?.full_project_number || ''"
     icon="mdi-package-variant"
     :icon-color="variantStatusColor"
     :breadcrumbs="breadcrumbItems"
@@ -24,7 +24,7 @@
 
     <template #subtitle>
       Wariant {{ variant?.variant_number || "#" }} •
-      {{ variant?.order?.full_order_number }}
+      {{ variant?.project?.full_project_number }}
     </template>
 
     <template #actions>
@@ -69,10 +69,10 @@ const variantStatusColor = computed(() => {
 });
 
 const breadcrumbItems = computed(() => [
-  { title: "Zamówienia", to: "/orders", disabled: false },
+  { title: "Projekty", to: "/projects", disabled: false },
   {
-    title: props.variant?.order?.full_order_number || "...",
-    to: `/orders/${props.variant?.order_id}`,
+    title: props.variant?.project?.full_project_number || "...",
+    to: `/projects/${props.variant?.project_id}`,
     disabled: false,
   },
   { title: `Wariant ${props.variant?.variant_number || ""}`, disabled: true },
