@@ -168,14 +168,14 @@
           </div>
         </template>
 
-        <!-- Liczba zamówień -->
-        <template v-slot:item.orders_count="{ item }">
+        <!-- Liczba projektów -->
+        <template v-slot:item.projects_count="{ item }">
           <v-chip
             size="small"
-            :color="item.orders_count > 0 ? 'blue' : 'grey'"
+            :color="item.projects_count > 0 ? 'blue' : 'grey'"
             variant="tonal"
           >
-            {{ item.orders_count || 0 }} {{ getOrdersLabel(item.orders_count) }}
+            {{ item.projects_count || 0 }} {{ getProjectsLabel(item.projects_count) }}
           </v-chip>
         </template>
 
@@ -240,7 +240,7 @@
                   size="small"
                   variant="text"
                   color="error"
-                  :disabled="item.orders_count > 0"
+                  :disabled="item.projects_count > 0"
                   @click.stop="confirmDelete(item)"
                 />
               </template>
@@ -374,17 +374,17 @@ const headers = [
   { title: "Klient", key: "name", width: "250px" },
   { title: "Kontakt", key: "contact", width: "220px", sortable: false },
   { title: "Adres", key: "address", width: "250px", sortable: false },
-  { title: "Zamówienia", key: "orders_count", align: "center", width: "120px" },
+  { title: "Projekty", key: "projects_count", align: "center", width: "120px" },
   { title: "Status", key: "is_active", align: "center", width: "110px", sortable: false },
   { title: "Akcje", key: "actions", align: "center", width: "160px", sortable: false },
 ];
 
 // Helpers
-const getOrdersLabel = (count: number) => {
-  if (!count || count === 0) return "zamówień";
-  if (count === 1) return "zamówienie";
-  if (count >= 2 && count <= 4) return "zamówienia";
-  return "zamówień";
+const getProjectsLabel = (count: number) => {
+  if (!count || count === 0) return "projektów";
+  if (count === 1) return "projekt";
+  if (count >= 2 && count <= 4) return "projekty";
+  return "projektów";
 };
 
 const resetFilters = () => {
