@@ -16,10 +16,10 @@ const authStore = useAuthStore()
 
 // TypeScript wymaga obsłużenia Promise
 authStore.initialize().then(async () => {
+  const metadataStore = useMetadataStore()
+  await metadataStore.fetchMetadata()
+
   app.use(router)
   app.use(vuetify)
   app.mount('#app')
-
-  const metadataStore = useMetadataStore()
-  await metadataStore.fetchMetadata()
 })
