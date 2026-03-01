@@ -188,10 +188,6 @@ const resetFilters = () => {
   search.value = "";
 };
 
-const resetFilters = () => {
-  search.value = "";
-};
-
 const refreshList = async () => {
   await workstationStore.fetchWorkstations();
 };
