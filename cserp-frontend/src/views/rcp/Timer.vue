@@ -100,7 +100,7 @@
             class="text-subtitle-1 text-grey-darken-1 mb-6 px-4"
           >
             <span class="text-primary font-weight-bold">
-              {{ task.production_order.variant.order?.full_order_number || "---" }}
+              {{ task.production_order.variant.project?.full_project_number || "---" }}
             </span>
             • {{ task.production_order.variant.name }}
           </div>

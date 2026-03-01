@@ -9,15 +9,15 @@
       <v-divider class="mb-2 mx-4" />
 
       <v-card-text class="pa-4 pt-0">
-        <!-- Zamówienie -->
+        <!-- Projekt -->
         <div class="detail-row">
-          <div class="label">Zamówienie</div>
+          <div class="label">Projekt</div>
           <div class="value">
             <router-link
-              :to="`/orders/${variant?.order_id}`"
+              :to="`/projects/${variant?.project_id}`"
               class="text-decoration-none text-primary font-weight-bold"
             >
-              {{ variant?.order?.full_order_number }}
+              {{ variant?.project?.full_project_number }}
             </router-link>
           </div>
         </div>
@@ -27,11 +27,11 @@
           <div class="label">Klient</div>
           <div class="value text-truncate">
             <router-link
-              v-if="variant?.order?.customer?.id"
-              :to="`/customers/${variant.order.customer.id}`"
+              v-if="variant?.project?.customer?.id"
+              :to="`/customers/${variant.project.customer.id}`"
               class="text-decoration-none text-primary font-weight-medium"
             >
-              {{ variant?.order?.customer?.name }}
+              {{ variant?.project?.customer?.name }}
             </router-link>
             <span v-else>-</span>
           </div>
@@ -83,28 +83,28 @@
         </div>
 
         <!-- Priorytet -->
-        <div v-if="variant?.order?.priority" class="detail-row">
-          <div class="label">Priorytet zamówienia</div>
+        <div v-if="variant?.project?.priority" class="detail-row">
+          <div class="label">Priorytet projektu</div>
           <div class="value">
             <v-chip
               size="small"
-              :color="formatPriority(variant.order.priority).color"
+              :color="formatPriority(variant.project.priority).color"
               variant="flat"
               class="font-weight-bold"
             >
               <v-icon start size="x-small">{{
-                formatPriority(variant.order.priority).icon
+                formatPriority(variant.project.priority).icon
               }}</v-icon>
-              {{ formatPriority(variant.order.priority).label }}
+              {{ formatPriority(variant.project.priority).label }}
             </v-chip>
           </div>
         </div>
 
         <!-- Termin realizacji -->
         <div class="detail-row">
-          <div class="label">Termin realizacji zamówienia</div>
+          <div class="label">Termin realizacji projektu</div>
           <div class="value font-weight-bold text-error">
-            {{ formatDateOnly(variant?.order?.planned_delivery_date) }}
+            {{ formatDateOnly(variant?.project?.planned_delivery_date) }}
           </div>
         </div>
 

@@ -92,7 +92,7 @@
 
           <template v-slot:item.order_info="{ item }">
             <span class="font-weight-bold text-primary text-body-1">
-              {{ item.full_order_number }}
+              {{ item.full_project_number }}
             </span>
             <span class="text-caption text-grey ml-1"> [{{ item.variant_number }}] </span>
           </template>
@@ -128,7 +128,7 @@
         <div class="text-subtitle-1 text-medium-emphasis mt-1">
           Zlecenie:
           <span class="text-primary font-weight-bold">{{
-            selectedVariant?.full_order_number
+            selectedVariant?.full_project_number
           }}</span>
           <span class="text-grey ml-2">({{ selectedVariant?.name }})</span>
         </div>
@@ -258,7 +258,7 @@
           <span class="text-grey mx-2">|</span>
           Zlecenie:
           <span class="text-primary font-weight-bold">{{
-            selectedVariant?.full_order_number
+            selectedVariant?.full_project_number
           }}</span>
         </div>
       </div>
@@ -424,8 +424,8 @@ const customSearch = (value: any, query: string, item: any) => {
   const q = query.toLowerCase();
   const raw = item.raw;
   return (
-    (raw.full_order_number && raw.full_order_number.toLowerCase().includes(q)) ||
-    (raw.order_number && raw.order_number.toLowerCase().includes(q)) ||
+    (raw.full_project_number && raw.full_project_number.toLowerCase().includes(q)) ||
+    (raw.project_number && raw.project_number.toLowerCase().includes(q)) ||
     (raw.name && raw.name.toLowerCase().includes(q)) ||
     (raw.customer_name && raw.customer_name.toLowerCase().includes(q))
   );
@@ -457,9 +457,9 @@ const loadVariants = async () => {
     const res = await api.get("/rcp/variants");
     availableVariants.value = res.data.map((variant: any) => ({
       ...variant,
-      full_order_number:
-        variant.full_order_number ||
-        `Z/${variant.order_number}/${variant.series || "0001"}`,
+      full_project_number:
+        variant.full_project_number ||
+        `P/${variant.project_number}/${variant.series || "0001"}`,
     }));
   } catch (e) {
     console.error("Błąd pobierania wariantów:", e);
