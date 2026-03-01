@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
+use App\Models\Project;
 use App\Models\Variant;
 use App\Enums\VariantType;
 use App\Enums\VariantStatus;
@@ -20,14 +20,14 @@ class VariantController extends Controller
     // =========================================================================
 
     /**
-     * Lista wszystkich grup i wariantów dla zamówienia (plaska lista).
+     * Lista wszystkich grup i wariantów dla projektu (plaska lista).
      * Frontend sam buduje drzewo na podstawie parent_variant_id.
      *
-     * GET /api/orders/{order}/variants
+     * GET /api/projects/{project}/variants
      */
-    public function index(Order $order)
+    public function index(Project $project)
     {
-        $variants = $order->variants()
+        $variants = $project->variants()
             ->with(['parentVariant', 'childVariants'])
             ->orderBy('variant_number')
             ->get();
@@ -47,7 +47,7 @@ class VariantController extends Controller
     public function show(Variant $variant)
     {
         $variant->load([
-            'order.customer',
+            'project.customer',
             'parentVariant',
             'childVariants',
             'productionOrder.services.assignedWorker',
@@ -63,16 +63,12 @@ class VariantController extends Controller
     // =========================================================================
 
     /**
-     * Utwórz nową GRUPĘ dla zamówienia.
+     * Utwórz nową GRUPĘ dla projektu.
      *
-     * Grupy to kontenery — nie mają wycen, materiałów ani produkcji.
-     * Backend automatycznie nadaje kolejną wolną literę (A, B, C...).
-     * is_group=true, quantity=0.
-     *
-     * POST /api/orders/{order}/variants
+     * POST /api/projects/{project}/variants
      * Payload: { name, description? }
      */
-    public function store(Request $request, Order $order)
+    public function store(Request $request, Project $project)
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
@@ -80,7 +76,7 @@ class VariantController extends Controller
         ]);
 
         // Następna wolna litera (pomija zajęte przez grupy top-level)
-        $existingLetters = $order->variants()
+        $existingLetters = $project->variants()
             ->whereNull('parent_variant_id')
             ->whereRaw('LENGTH(variant_number) = 1')
             ->pluck('variant_number')
@@ -91,13 +87,13 @@ class VariantController extends Controller
             $letter = chr(ord($letter) + 1);
         }
 
-        $group = $order->variants()->create([
+        $group = $project->variants()->create([
             'is_group'        => true,
             'variant_number'  => $letter,
             'name'            => $validated['name'],
             'description'     => $validated['description'] ?? null,
             'quantity'        => 0,
-            'type'            => VariantType::SERIAL, // Grupy maja domyslnie SERIAL — nie ma znaczenia
+            'type'            => VariantType::SERIAL,
             'status'          => VariantStatus::DRAFT,
             'parent_variant_id' => null,
         ]);
@@ -115,19 +111,15 @@ class VariantController extends Controller
     /**
      * Utwórz WARIANT jako dziecko grupy lub innego wariantu.
      *
-     * Backend automatycznie nadaje numer wg reguly:
-     *   A (bez cyfry)  → A1, A2, A3 (separator brak)
-     *   A1 (z cyfra)   → A1_1, A1_2  (separator _)
-     *
-     * POST /api/orders/{order}/variants/{parent}/children
+     * POST /api/projects/{project}/variants/{parent}/children
      * Payload: { name, quantity (>=1), type (SERIAL|PROTOTYPE), description? }
      */
-    public function storeChild(Request $request, Order $order, Variant $parent)
+    public function storeChild(Request $request, Project $project, Variant $parent)
     {
-        // Waliduj ze parent nalezy do tego zamowienia
-        if ($parent->order_id !== $order->id) {
+        // Waliduj ze parent nalezy do tego projektu
+        if ($parent->project_id !== $project->id) {
             return response()->json([
-                'message' => 'Rodzic nie nalezy do tego zamowienia.',
+                'message' => 'Rodzic nie nalezy do tego projektu.',
             ], 422);
         }
 
@@ -140,7 +132,7 @@ class VariantController extends Controller
 
         $variantNumber = $this->nextChildNumber($parent);
 
-        $variant = $order->variants()->create([
+        $variant = $project->variants()->create([
             'is_group'         => false,
             'parent_variant_id' => $parent->id,
             'variant_number'   => $variantNumber,
@@ -164,23 +156,14 @@ class VariantController extends Controller
     // UPDATE
     // =========================================================================
 
-    /**
-     * Aktualizuj grupe lub wariant.
-     *
-     * Blokujemy konwersje miedzy typami (is_group nie moze sie zmienic).
-     *
-     * PUT /api/variants/{variant}
-     */
     public function update(Request $request, Variant $variant)
     {
         if ($variant->isGroup()) {
-            // Grupy: tylko nazwa i opis
             $validated = $request->validate([
                 'name'        => 'sometimes|string|max:255',
                 'description' => 'nullable|string',
             ]);
         } else {
-            // Warianty: pelna edycja
             $validated = $request->validate([
                 'name'            => 'sometimes|string|max:255',
                 'quantity'        => 'sometimes|integer|min:1',
@@ -205,17 +188,6 @@ class VariantController extends Controller
     // DESTROY
     // =========================================================================
 
-    /**
-     * Usun wariant lub grupe.
-     *
-     * Dla GRUP z dziecmi wymagany parametr ?force=true.
-     * Bez niego backend zwraca 422.
-     * Z force=true kasuje grupe i cale drzewo potomkow rekurencyjnie.
-     *
-     * Dla WARIANTOW — blokuje usuniecie jesli sa w produkcji (nie DRAFT/CANCELLED).
-     *
-     * DELETE /api/variants/{variant}?force=true
-     */
     public function destroy(Request $request, Variant $variant)
     {
         $force = $request->boolean('force', false);
@@ -223,7 +195,6 @@ class VariantController extends Controller
         return DB::transaction(function () use ($variant, $force) {
 
             if ($variant->isGroup()) {
-                // Laduj dzieci
                 $variant->load('childVariants');
                 $hasChildren = $variant->childVariants->isNotEmpty();
 
@@ -235,7 +206,6 @@ class VariantController extends Controller
                 }
 
                 if ($hasChildren) {
-                    // Usun rekurencyjnie — wszystkich potomkow
                     $this->deleteDescendants($variant);
                 }
 
@@ -246,7 +216,6 @@ class VariantController extends Controller
                 ]);
             }
 
-            // Wariant: blokuj usuniecie jesli jest w produkcji
             $blocked = [VariantStatus::PRODUCTION, VariantStatus::COMPLETED];
             if (in_array($variant->status, $blocked)) {
                 return response()->json([
@@ -262,9 +231,6 @@ class VariantController extends Controller
         });
     }
 
-    /**
-     * Rekurencyjnie usun wszystkich potomkow danego wezla.
-     */
     private function deleteDescendants(Variant $parent): void
     {
         $parent->load('childVariants.childVariants');
@@ -279,11 +245,6 @@ class VariantController extends Controller
     // UPDATE STATUS
     // =========================================================================
 
-    /**
-     * Zmien status wariantu (niedostepne dla grup).
-     *
-     * PATCH /api/variants/{variant}/status
-     */
     public function updateStatus(Request $request, Variant $variant)
     {
         if ($variant->isGroup()) {
@@ -305,11 +266,6 @@ class VariantController extends Controller
     // REVIEW PROTOTYPE
     // =========================================================================
 
-    /**
-     * Recenzja prototypu (zatwierdzenie / odrzucenie).
-     *
-     * POST /api/variants/{variant}/review
-     */
     public function reviewPrototype(Request $request, Variant $variant)
     {
         if ($variant->isGroup()) {
@@ -337,22 +293,6 @@ class VariantController extends Controller
     // DUPLICATE
     // =========================================================================
 
-    /**
-     * Duplikuj grupe lub wariant.
-     *
-     * POST /api/variants/{variant}/duplicate
-     *
-     * Dla GRUPY:
-     *   { relation: "sibling", name, description?, copy_children }
-     *   - Tworzy nowa grupe (kolejna litera)
-     *   - copy_children=true → kopiuje cale drzewo wariantow rekurencyjnie
-     *
-     * Dla WARIANTU:
-     *   { relation: "sibling"|"child", name, quantity, type, description?,
-     *     copy_quotation, copy_materials }
-     *   - sibling: nowy wariant w tej samej grupie
-     *   - child: podwariant tego wariantu
-     */
     public function duplicate(Request $request, Variant $variant)
     {
         try {
@@ -374,12 +314,6 @@ class VariantController extends Controller
         }
     }
 
-    /**
-     * Duplikuj GRUPE.
-     *
-     * Zawsze jako sibling (kolejna litera). Grupy nie moga byc dzieclmi innych grup.
-     * Z copy_children=true kopiuje cale drzewo wariantow wewnatrz grupy.
-     */
     private function duplicateGroup(Request $request, Variant $group)
     {
         $validated = $request->validate([
@@ -389,10 +323,9 @@ class VariantController extends Controller
         ]);
 
         return DB::transaction(function () use ($group, $validated) {
-            $order = $group->order;
+            $project = $group->project;
 
-            // Nastepna wolna litera dla grupy top-level
-            $existingLetters = $order->variants()
+            $existingLetters = $project->variants()
                 ->whereNull('parent_variant_id')
                 ->whereRaw('LENGTH(variant_number) = 1')
                 ->pluck('variant_number')
@@ -403,8 +336,7 @@ class VariantController extends Controller
                 $newLetter = chr(ord($newLetter) + 1);
             }
 
-            // Utwórz nowa grupe
-            $newGroup = $order->variants()->create([
+            $newGroup = $project->variants()->create([
                 'is_group'         => true,
                 'parent_variant_id' => null,
                 'variant_number'   => $newLetter,
@@ -415,12 +347,11 @@ class VariantController extends Controller
                 'status'           => VariantStatus::DRAFT,
             ]);
 
-            // Kopiuj dzieci jesli copy_children=true
             if (!empty($validated['copy_children'])) {
                 $group->load('childVariants');
 
                 foreach ($group->childVariants as $child) {
-                    $this->copyVariantUnderNewParent($child, $newGroup, $order, $newLetter);
+                    $this->copyVariantUnderNewParent($child, $newGroup, $project, $newLetter);
                 }
             }
 
@@ -437,34 +368,17 @@ class VariantController extends Controller
         });
     }
 
-    /**
-     * Rekurencyjnie kopiuje wariant (i jego dzieci) pod nowego rodzica.
-     * Numer wariantu: podmien prefiks starego rodzica na nowy.
-     *
-     * Przyklad:
-     *   Stary: A1 (rodzic A), Nowy rodzic B → B1
-     *   Stary: A1_1 (rodzic A1), Nowy rodzic B1 → B1_1
-     *
-     * @param Variant $source      Zrodlowy wariant do skopiowania
-     * @param Variant $newParent   Nowy rodzic (nowa grupa lub wariant)
-     * @param Order   $order       Zamowienie docelowe
-     * @param string  $oldPrefix   Stary prefix do podmiany (np. "A")
-     */
     private function copyVariantUnderNewParent(
         Variant $source,
         Variant $newParent,
-        Order $order,
+        Project $project,
         string $oldPrefix
     ): Variant {
-        // Podmien pierwszy segment numeru (liter) na nowy prefix grupy
         $newParentNumber = $newParent->variant_number;
         $sourceNumber    = $source->variant_number;
-
-        // Nowy numer: podmien stary prefix na nowy
-        // A1 → B1, A1_1 → B1_1, A2 → B2
         $newNumber = $newParentNumber . substr($sourceNumber, strlen($oldPrefix));
 
-        $newVariant = $order->variants()->create([
+        $newVariant = $project->variants()->create([
             'is_group'         => false,
             'parent_variant_id' => $newParent->id,
             'variant_number'   => $newNumber,
@@ -476,18 +390,14 @@ class VariantController extends Controller
             'is_approved'      => false,
         ]);
 
-        // Rekurencyjnie kopiuj dzieci
         $source->load('childVariants');
         foreach ($source->childVariants as $grandChild) {
-            $this->copyVariantUnderNewParent($grandChild, $newVariant, $order, $oldPrefix);
+            $this->copyVariantUnderNewParent($grandChild, $newVariant, $project, $oldPrefix);
         }
 
         return $newVariant;
     }
 
-    /**
-     * Duplikuj WARIANT jako brat (sibling) lub dziecko (child).
-     */
     private function duplicateVariant(Request $request, Variant $variant)
     {
         $validated = $request->validate([
@@ -501,19 +411,17 @@ class VariantController extends Controller
         ]);
 
         return DB::transaction(function () use ($variant, $validated) {
-            $order = $variant->order;
+            $project = $variant->project;
 
-            // Oblicz numer i parent_id dla nowego wariantu
             if ($validated['relation'] === 'sibling') {
-                $variantNumber  = $this->nextSiblingNumber($order, $variant);
+                $variantNumber  = $this->nextSiblingNumber($project, $variant);
                 $parentVariantId = $variant->parent_variant_id;
             } else {
                 $variantNumber  = $this->nextChildNumber($variant);
                 $parentVariantId = $variant->id;
             }
 
-            // Utwórz nowy wariant
-            $newVariant = $order->variants()->create([
+            $newVariant = $project->variants()->create([
                 'is_group'         => false,
                 'parent_variant_id' => $parentVariantId,
                 'variant_number'   => $variantNumber,
@@ -525,7 +433,6 @@ class VariantController extends Controller
                 'is_approved'      => false,
             ]);
 
-            // Kopiuj materialy
             if (!empty($validated['copy_materials'])) {
                 foreach ($variant->materials()->get() as $material) {
                     $newVariant->materials()->create([
@@ -546,7 +453,6 @@ class VariantController extends Controller
                 }
             }
 
-            // Kopiuj wycene
             if (!empty($validated['copy_quotation'])) {
                 $sourceQuotation = $variant->approvedQuotation
                     ?? $variant->quotations()->with(['items.materials', 'items.services'])
@@ -620,17 +526,10 @@ class VariantController extends Controller
     // HELPERS — NUMERACJA
     // =========================================================================
 
-    /**
-     * Nastepna wolna litera/numer dla BRATA zrodlowego wariantu.
-     *
-     * Jezeli zrodlo jest top-level → nastepna wolna litera wsrod grup (B, C, D...)
-     * Jezeli zrodlo jest dzieckiem → nastepny numer wsrod rodzenstwa (A2, A3...)
-     */
-    private function nextSiblingNumber(Order $order, Variant $source): string
+    private function nextSiblingNumber(Project $project, Variant $source): string
     {
         if ($source->parent_variant_id === null) {
-            // Top-level: nastepna wolna litera
-            $existing = $order->variants()
+            $existing = $project->variants()
                 ->whereNull('parent_variant_id')
                 ->whereRaw('LENGTH(variant_number) = 1')
                 ->pluck('variant_number')
@@ -643,25 +542,14 @@ class VariantController extends Controller
             return $letter;
         }
 
-        // Dziecko: nastepny numer wsrod dzieci tego samego rodzica
         $parent = Variant::findOrFail($source->parent_variant_id);
         return $this->nextChildNumber($parent);
     }
 
-    /**
-     * Nastepny numer dziecka dla danego rodzica.
-     *
-     * Regula separatorow:
-     *   Rodzic top-level (A, B)  → A1, A2, A3    (bez separatora)
-     *   Rodzic 1-poziom (A1, B2) → A1_1, A1_2    (separator _)
-     *
-     * Selektor cyfry (czy rodzic juz "ma cyfre") decyduje o separatorze.
-     */
     private function nextChildNumber(Variant $parent): string
     {
         $parentNumber = $parent->variant_number;
 
-        // Jezeli rodzic zawiera cyfre — uzywamy _ jako separatora
         $isDeepParent = (bool) preg_match('/\d/', $parentNumber);
         $separator    = $isDeepParent ? '_' : '';
 

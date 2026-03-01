@@ -3,9 +3,9 @@
 namespace App\Enums;
 
 /**
- * Priorytet zamówienia
+ * Priorytet projektu
  */
-enum OrderPriority: string
+enum ProjectPriority: string
 {
     case LOW = 'LOW';
     case NORMAL = 'NORMAL';

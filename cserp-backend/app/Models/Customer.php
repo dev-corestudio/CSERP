@@ -22,8 +22,8 @@ class Customer extends Model
         'type' => CustomerType::class,
     ];
 
-    public function orders()
+    public function projects()
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(Project::class);
     }
 }

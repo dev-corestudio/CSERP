@@ -10,12 +10,12 @@ use App\Enums\{
     CustomerType,
     AssortmentType,
     AssortmentUnit,
-    OrderOverallStatus,
+    ProjectOverallStatus,
     PaymentStatus,
     WorkstationType,
     WorkstationStatus,
     ProductionStatus,
-    OrderPriority,
+    ProjectPriority,
     TestResult,
     DeliveryStatus,
     InvoiceStatus,
@@ -49,7 +49,7 @@ class MetadataController extends Controller
         ]);
 
         return response()->json([
-            // NOWE: Metadata dla wariantów
+            // Metadata dla wariantów
             'variant_types' => $mapWithColor(VariantType::class),
             'variant_statuses' => $mapFull(VariantStatus::class),
 
@@ -57,9 +57,9 @@ class MetadataController extends Controller
             'customer_types' => $map(CustomerType::class),
             'assortment_types' => $map(AssortmentType::class),
             'units' => $map(AssortmentUnit::class),
-            'order_statuses' => $mapFull(OrderOverallStatus::class),
+            'project_statuses' => $mapFull(ProjectOverallStatus::class),
             'payment_statuses' => $mapFull(PaymentStatus::class),
-            'order_priorities' => $mapWithColor(OrderPriority::class),
+            'project_priorities' => $mapWithColor(ProjectPriority::class),
             'workstation_types' => $map(WorkstationType::class),
             'workstation_statuses' => $mapWithColor(WorkstationStatus::class),
             'production_statuses' => $map(ProductionStatus::class),

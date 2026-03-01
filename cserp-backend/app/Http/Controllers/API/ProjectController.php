@@ -3,33 +3,33 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
+use App\Models\Project;
 use App\Traits\Paginatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Enums\ProductionStatus;
 use App\Enums\PaymentStatus;
-use App\Enums\OrderOverallStatus;
-use App\Enums\OrderPriority;
+use App\Enums\ProjectOverallStatus;
+use App\Enums\ProjectPriority;
 use Illuminate\Validation\Rule;
 
-class OrderController extends Controller
+class ProjectController extends Controller
 {
     use Paginatable;
 
     // =========================================================================
-    // NUMER ZAMÓWIENIA
+    // NUMER PROJEKTU
     // =========================================================================
 
     /**
-     * Zwraca następny wolny numer zamówienia (podgląd).
+     * Zwraca następny wolny numer projektu (podgląd).
      * Używany przez frontend do wyświetlenia info — nie rezerwuje numeru.
      *
-     * GET /api/orders/next-number
+     * GET /api/projects/next-number
      */
     public function nextNumber()
     {
-        $maxNumber = Order::max('order_number');
+        $maxNumber = Project::max('project_number');
         $next = $maxNumber ? intval($maxNumber) + 1 : 1000;
         $formatted = str_pad((string) $next, 4, '0', STR_PAD_LEFT);
 
@@ -37,27 +37,27 @@ class OrderController extends Controller
     }
 
     // =========================================================================
-    // LISTA ZAMÓWIEŃ
+    // LISTA PROJEKTÓW
     // =========================================================================
 
     /**
-     * Lista zamówień z paginacją server-side.
+     * Lista projektów z paginacją server-side.
      *
      * Query params:
      *   - page:         int    (domyślnie 1)
      *   - per_page:     int    (domyślnie 15, max 100)
-     *   - sort_by:      string (created_at | order_number | planned_delivery_date | overall_status)
+     *   - sort_by:      string (created_at | project_number | planned_delivery_date | overall_status)
      *   - sort_dir:     string (asc | desc, domyślnie desc)
-     *   - search:       string (szuka w order_number, description, customer.name)
+     *   - search:       string (szuka w project_number, description, customer.name)
      *   - status:       string (filtruje overall_status)
      *   - quick_filter: string (active | completed | all)
      *
-     * GET /api/orders
+     * GET /api/projects
      */
     public function index(Request $request)
     {
         try {
-            $query = Order::with(['customer', 'variants']);
+            $query = Project::with(['customer', 'variants']);
 
             // Filtr statusu
             if ($request->filled('status') && $request->input('status') !== 'all') {
@@ -96,7 +96,7 @@ class OrderController extends Controller
             if ($request->filled('search')) {
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
-                    $q->where('order_number', 'like', "%{$search}%")
+                    $q->where('project_number', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%")
                         ->orWhereHas('customer', function ($q) use ($search) {
                             $q->where('name', 'like', "%{$search}%");
@@ -107,37 +107,37 @@ class OrderController extends Controller
             // Sortowanie z whitelistą kolumn
             $this->applySorting($query, $request, [
                 'created_at',
-                'order_number',
+                'project_number',
                 'planned_delivery_date',
                 'overall_status',
             ], 'created_at', 'desc');
 
             // Paginacja
-            $orders = $this->paginateQuery($query, $request);
+            $projects = $this->paginateQuery($query, $request);
 
-            return response()->json($orders);
+            return response()->json($projects);
         } catch (\Exception $e) {
-            \Log::error('Orders index error: ' . $e->getMessage());
+            \Log::error('Projects index error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Błąd podczas pobierania zamówień',
+                'message' => 'Błąd podczas pobierania projektów',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     // =========================================================================
-    // SZCZEGÓŁY ZAMÓWIENIA
+    // SZCZEGÓŁY PROJEKTU
     // =========================================================================
 
     /**
-     * Szczegóły zamówienia z wariantami, prototypami i wycenami.
+     * Szczegóły projektu z wariantami, prototypami i wycenami.
      *
-     * GET /api/orders/{order}
+     * GET /api/projects/{project}
      */
-    public function show(Order $order)
+    public function show(Project $project)
     {
         try {
-            $order->load([
+            $project->load([
                 'customer',
                 'variants.prototypes',
                 'variants.productionOrder',
@@ -145,30 +145,25 @@ class OrderController extends Controller
                 'images'
             ]);
 
-            return response()->json($order);
+            return response()->json($project);
         } catch (\Exception $e) {
-            \Log::error('Order show error: ' . $e->getMessage());
+            \Log::error('Project show error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Błąd podczas pobierania zamówienia',
+                'message' => 'Błąd podczas pobierania projektu',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     // =========================================================================
-    // TWORZENIE NOWEGO ZAMÓWIENIA
+    // TWORZENIE NOWEGO PROJEKTU
     // =========================================================================
 
     /**
-     * Utwórz nowe zamówienie.
+     * Utwórz nowy projekt.
      *
-     * Numer zamówienia (order_number) jest ZAWSZE generowany przez serwer —
-     * user go nie podaje. Serwer bierze max(order_number) + 1.
-     * Nowe zamówienie dostaje serię 0001.
-     *
-     * Przykład:
-     *   Ostatni order_number w bazie: 1005
-     *   Nowe zamówienie: order_number=1006, series=0001 → Z/1006/0001
+     * Numer projektu (project_number) jest ZAWSZE generowany przez serwer.
+     * Nowy projekt dostaje serię 0001.
      *
      * Body:
      * {
@@ -178,7 +173,7 @@ class OrderController extends Controller
      *   "priority":              "normal"      (opcjonalne, domyślnie "normal")
      * }
      *
-     * POST /api/orders
+     * POST /api/projects
      */
     public function store(Request $request)
     {
@@ -187,35 +182,35 @@ class OrderController extends Controller
                 'customer_id' => 'required|exists:customers,id',
                 'description' => 'required|string',
                 'planned_delivery_date' => 'required|date',
-                'priority' => ['nullable', Rule::enum(OrderPriority::class)],
+                'priority' => ['nullable', Rule::enum(ProjectPriority::class)],
             ]);
 
             DB::beginTransaction();
 
-            // Serwer generuje kolejny numer zamówienia — user nie ma wpływu
-            $maxNumber = Order::max('order_number');
+            // Serwer generuje kolejny numer projektu
+            $maxNumber = Project::max('project_number');
             $nextNumber = $maxNumber ? intval($maxNumber) + 1 : 1000;
-            $orderNumber = str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
+            $projectNumber = str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
 
-            // Pierwsze zamówienie z tym numerem → seria 0001
-            $series = Order::generateSeries($orderNumber);
+            // Pierwszy projekt z tym numerem → seria 0001
+            $series = Project::generateSeries($projectNumber);
 
-            $order = Order::create([
+            $project = Project::create([
                 'customer_id' => $validated['customer_id'],
-                'order_number' => $orderNumber,
+                'project_number' => $projectNumber,
                 'series' => $series,
                 'description' => $validated['description'],
                 'planned_delivery_date' => $validated['planned_delivery_date'],
-                'priority' => $validated['priority'] ?? OrderPriority::NORMAL,
-                'overall_status' => OrderOverallStatus::DRAFT,       // Nowe zamówienie startuje jako DRAFT
+                'priority' => $validated['priority'] ?? ProjectPriority::NORMAL,
+                'overall_status' => ProjectOverallStatus::DRAFT,
                 'payment_status' => PaymentStatus::UNPAID,
             ]);
 
             DB::commit();
 
-            $order->load('customer');
+            $project->load('customer');
 
-            return response()->json($order, 201);
+            return response()->json($project, 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
@@ -225,25 +220,25 @@ class OrderController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Order store error: ' . $e->getMessage());
+            \Log::error('Project store error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Błąd podczas tworzenia zamówienia',
+                'message' => 'Błąd podczas tworzenia projektu',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     // =========================================================================
-    // AKTUALIZACJA ZAMÓWIENIA
+    // AKTUALIZACJA PROJEKTU
     // =========================================================================
 
     /**
-     * Aktualizuj dane zamówienia.
-     * Nie można zmieniać order_number ani series przez ten endpoint.
+     * Aktualizuj dane projektu.
+     * Nie można zmieniać project_number ani series przez ten endpoint.
      *
-     * PUT /api/orders/{order}
+     * PUT /api/projects/{project}
      */
-    public function update(Request $request, Order $order)
+    public function update(Request $request, Project $project)
     {
         try {
             $validated = $request->validate([
@@ -254,11 +249,11 @@ class OrderController extends Controller
                 'overall_status' => 'sometimes|string',
             ]);
 
-            // order_number i series są niezmieniane — integralność danych
-            $order->update($validated);
-            $order->load('customer');
+            // project_number i series są niezmieniane — integralność danych
+            $project->update($validated);
+            $project->load('customer');
 
-            return response()->json($order);
+            return response()->json($project);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -266,43 +261,43 @@ class OrderController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Order update error: ' . $e->getMessage());
+            \Log::error('Project update error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Błąd podczas aktualizacji zamówienia',
+                'message' => 'Błąd podczas aktualizacji projektu',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     // =========================================================================
-    // USUWANIE ZAMÓWIENIA
+    // USUWANIE PROJEKTU
     // =========================================================================
 
     /**
-     * Usuń zamówienie.
+     * Usuń projekt.
      * Dozwolone tylko w statusie draft lub quotation (brak aktywnej produkcji).
      *
-     * DELETE /api/orders/{order}
+     * DELETE /api/projects/{project}
      */
-    public function destroy(Order $order)
+    public function destroy(Project $project)
     {
         try {
-            if (!in_array($order->overall_status->value ?? $order->overall_status, ['draft', 'quotation'])) {
+            if (!in_array($project->overall_status->value ?? $project->overall_status, ['draft', 'quotation', 'DRAFT', 'QUOTATION'])) {
                 return response()->json([
-                    'message' => 'Można usunąć tylko zamówienia w fazie szkicu lub wyceny'
+                    'message' => 'Można usunąć tylko projekty w fazie szkicu lub wyceny'
                 ], 403);
             }
 
-            $orderNumber = $order->full_order_number;
-            $order->delete();
+            $projectNumber = $project->full_project_number;
+            $project->delete();
 
             return response()->json([
-                'message' => "Zamówienie {$orderNumber} usunięte pomyślnie"
+                'message' => "Projekt {$projectNumber} usunięty pomyślnie"
             ]);
         } catch (\Exception $e) {
-            \Log::error('Order delete error: ' . $e->getMessage());
+            \Log::error('Project delete error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Błąd podczas usuwania zamówienia',
+                'message' => 'Błąd podczas usuwania projektu',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -313,18 +308,14 @@ class OrderController extends Controller
     // =========================================================================
 
     /**
-     * Pełne podsumowanie finansowe zamówienia:
-     *  - Suma zatwierdzonych wycen (netto/brutto) per wariant i łącznie
-     *  - Rzeczywiste koszty usług z produkcji
-     *  - Rzeczywiste koszty materiałów
-     *  - Wariancja całkowita
+     * Pełne podsumowanie finansowe projektu.
      *
-     * GET /api/orders/{order}/financial-summary
+     * GET /api/projects/{project}/financial-summary
      */
-    public function financialSummary(Order $order)
+    public function financialSummary(Project $project)
     {
         try {
-            $order->load([
+            $project->load([
                 'variants.approvedQuotation',
                 'variants.productionOrder.services',
             ]);
@@ -337,7 +328,7 @@ class OrderController extends Controller
             $totalActualMat = 0.0;
             $totalActualSvc = 0.0;
 
-            foreach ($order->variants as $variant) {
+            foreach ($project->variants as $variant) {
                 $approvedQ = $variant->approvedQuotation;
 
                 $approvedNet = $approvedQ ? (float) $approvedQ->total_net : 0.0;
@@ -345,7 +336,7 @@ class OrderController extends Controller
                 $approvedMat = $approvedQ ? (float) $approvedQ->total_materials_cost : 0.0;
                 $approvedSvc = $approvedQ ? (float) $approvedQ->total_services_cost : 0.0;
 
-                // Koszty rzeczywiste materiałów — bezpośrednie zapytanie (brak błędów z castami)
+                // Koszty rzeczywiste materiałów
                 $actualMat = (float) \App\Models\VariantMaterial::where('variant_id', $variant->id)
                     ->sum('total_cost');
 
@@ -388,8 +379,8 @@ class OrderController extends Controller
             $totalVariance = $totalActual - $totalApprovedGross;
 
             return response()->json([
-                'order_id' => $order->id,
-                'order_number' => $order->full_order_number,
+                'project_id' => $project->id,
+                'project_number' => $project->full_project_number,
 
                 'total_approved_net' => round($totalApprovedNet, 2),
                 'total_approved_gross' => round($totalApprovedGross, 2),
@@ -409,7 +400,7 @@ class OrderController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Order financial summary error: ' . $e->getMessage());
+            \Log::error('Project financial summary error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Błąd podczas pobierania podsumowania finansowego',
                 'error' => $e->getMessage()

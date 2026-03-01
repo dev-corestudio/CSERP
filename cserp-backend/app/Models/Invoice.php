@@ -8,7 +8,7 @@ use App\Enums\InvoiceStatus;
 class Invoice extends Model
 {
     protected $fillable = [
-        'order_id',
+        'project_id',
         'invoice_number',
         'total_net',
         'total_gross',
@@ -27,9 +27,9 @@ class Invoice extends Model
         'status' => InvoiceStatus::class,
     ];
 
-    public function order()
+    public function project()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Project::class);
     }
 
     public function payments()

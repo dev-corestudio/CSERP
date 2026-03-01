@@ -10,7 +10,7 @@ return new class extends Migration {
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->string('invoice_number')->unique();
             $table->decimal('total_net', 10, 2);
             $table->decimal('total_gross', 10, 2);

@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum OrderPhase: string
+enum ProjectPhase: string
 {
     case QUOTATION = 'quotation';
     case PROTOTYPE = 'prototype';

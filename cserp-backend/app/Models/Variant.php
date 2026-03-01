@@ -15,7 +15,7 @@ class Variant extends Model
     protected $table = 'variants';
 
     protected $fillable = [
-        'order_id',
+        'project_id',
         'parent_variant_id',
         'is_group',
         'variant_number',
@@ -43,9 +43,9 @@ class Variant extends Model
 
     // Relacje
 
-    public function order(): BelongsTo
+    public function project(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Project::class);
     }
 
     public function parentVariant(): BelongsTo

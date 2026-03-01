@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
+use App\Models\Project;
 use App\Models\Variant;
 use App\Services\SeriesService;
 use Illuminate\Http\Request;
@@ -11,16 +11,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 /**
- * OrderSeriesController — zarządzanie seriami zamówień
+ * ProjectSeriesController — zarządzanie seriami projektów
  *
- * Seria = kolejne uruchomienie produkcji dla tego samego numeru zamówienia.
+ * Seria = kolejne uruchomienie produkcji dla tego samego numeru projektu.
  *
  * Endpointy:
- *   GET  /api/orders/{order}/series          → lista wszystkich serii dla order_number
- *   GET  /api/orders/{order}/series/variants  → warianty z serii do selektora kopiowania
- *   POST /api/orders/{order}/series/create    → utwórz nową serię (pusta lub z kopiowaniem)
+ *   GET  /api/projects/{project}/series          → lista wszystkich serii dla project_number
+ *   GET  /api/projects/{project}/series/variants  → warianty z serii do selektora kopiowania
+ *   POST /api/projects/{project}/series/create    → utwórz nową serię (pusta lub z kopiowaniem)
  */
-class OrderSeriesController extends Controller
+class ProjectSeriesController extends Controller
 {
     public function __construct(
         protected SeriesService $seriesService
@@ -32,28 +32,24 @@ class OrderSeriesController extends Controller
     // =========================================================================
 
     /**
-     * Pobierz wszystkie serie dla danego numeru zamówienia.
+     * Pobierz wszystkie serie dla danego numeru projektu.
      *
-     * Wejście: dowolne zamówienie z tego samego order_number.
-     * Wyjście: lista wszystkich serii (Z/0001/0001, Z/0001/0002, ...),
-     *          posortowana rosnąco.
-     *
-     * GET /api/orders/{order}/series
+     * GET /api/projects/{project}/series
      */
-    public function index(Order $order): JsonResponse
+    public function index(Project $project): JsonResponse
     {
         try {
-            $series = $this->seriesService->getAllSeriesForOrderNumber($order->order_number);
+            $series = $this->seriesService->getAllSeriesForProjectNumber($project->project_number);
 
             return response()->json([
-                'order_number' => $order->order_number,
+                'project_number' => $project->project_number,
                 'data' => $series,
                 'count' => $series->count(),
             ]);
         } catch (\Exception $e) {
-            Log::error("OrderSeriesController::index error: {$e->getMessage()}");
+            Log::error("ProjectSeriesController::index error: {$e->getMessage()}");
             return response()->json([
-                'message' => 'Błąd podczas pobierania serii zamówienia',
+                'message' => 'Błąd podczas pobierania serii projektu',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -66,25 +62,20 @@ class OrderSeriesController extends Controller
     /**
      * Pobierz warianty z danej serii do wyświetlenia w selektorze kopiowania.
      *
-     * Zwraca warianty z informacją:
-     *  - czy mają wycenę (zatwierdzoną lub nie)
-     *  - czy mają materiały
-     *  - podstawowe dane (nazwa, ilość, status)
-     *
-     * GET /api/orders/{order}/series/variants
+     * GET /api/projects/{project}/series/variants
      */
-    public function variantsForSelector(Order $order): JsonResponse
+    public function variantsForSelector(Project $project): JsonResponse
     {
         try {
-            $variants = $this->seriesService->getVariantsForCopySelector($order);
+            $variants = $this->seriesService->getVariantsForCopySelector($project);
 
             return response()->json([
-                'order_id' => $order->id,
-                'full_order_number' => $order->full_order_number,
+                'project_id' => $project->id,
+                'full_project_number' => $project->full_project_number,
                 'data' => $variants,
             ]);
         } catch (\Exception $e) {
-            Log::error("OrderSeriesController::variantsForSelector error: {$e->getMessage()}");
+            Log::error("ProjectSeriesController::variantsForSelector error: {$e->getMessage()}");
             return response()->json([
                 'message' => 'Błąd podczas pobierania wariantów do selektora',
                 'error' => $e->getMessage(),
@@ -97,42 +88,11 @@ class OrderSeriesController extends Controller
     // =========================================================================
 
     /**
-     * Utwórz nową serię dla zamówienia.
+     * Utwórz nową serię dla projektu.
      *
-     * Tryby działania:
-     *
-     * 1. PUSTA SERIA (bez copy_from_order_id lub bez variants):
-     *    {
-     *      "description":           "Seria letnia 2025",
-     *      "planned_delivery_date": "2025-08-01",
-     *      "priority":              "high"
-     *    }
-     *
-     * 2. SERIA Z KOPIOWANIEM WARIANTÓW:
-     *    {
-     *      "description":            "Seria Q3 2025",
-     *      "planned_delivery_date":  "2025-09-15",
-     *      "copy_from_order_id":     42,      ← ID serii źródłowej (musi mieć ten sam order_number)
-     *      "variants": [
-     *        {
-     *          "source_variant_id": 5,
-     *          "copy_quotation":    true,    ← kopiuj wycenę (zatwierdzoną lub najnowszą)
-     *          "copy_materials":    false    ← kopiuj materiały wariantu
-     *        },
-     *        {
-     *          "source_variant_id": 7,
-     *          "copy_quotation":    true,
-     *          "copy_materials":    true
-     *        }
-     *      ]
-     *    }
-     *
-     * POST /api/orders/{order}/series/create
-     *
-     * Parametr {order} = dowolne zamówienie z tego samego order_number
-     * (zazwyczaj aktualna seria, z której widoku user klika "Nowa seria").
+     * POST /api/projects/{project}/series/create
      */
-    public function create(Request $request, Order $order): JsonResponse
+    public function create(Request $request, Project $project): JsonResponse
     {
         // Walidacja danych wejściowych
         $validated = $request->validate([
@@ -141,7 +101,7 @@ class OrderSeriesController extends Controller
             'priority' => 'nullable|string|in:low,normal,high,urgent',
 
             // Opcjonalne — tylko gdy kopiujemy z innej serii
-            'copy_from_order_id' => 'nullable|integer|exists:orders,id',
+            'copy_from_project_id' => 'nullable|integer|exists:projects,id',
 
             // Lista wariantów do skopiowania
             'variants' => 'nullable|array',
@@ -155,28 +115,28 @@ class OrderSeriesController extends Controller
         ]);
 
         try {
-            // Jeśli podano copy_from_order_id — sprawdź czy ma ten sam order_number
+            // Jeśli podano copy_from_project_id — sprawdź czy ma ten sam project_number
             $sourceForCopy = null;
-            if (!empty($validated['copy_from_order_id'])) {
-                $sourceForCopy = Order::findOrFail($validated['copy_from_order_id']);
+            if (!empty($validated['copy_from_project_id'])) {
+                $sourceForCopy = Project::findOrFail($validated['copy_from_project_id']);
 
-                if ($sourceForCopy->order_number !== $order->order_number) {
+                if ($sourceForCopy->project_number !== $project->project_number) {
                     return response()->json([
                         'message' => "Seria źródłowa (#{$sourceForCopy->id}, " .
-                            "{$sourceForCopy->full_order_number}) ma inny numer zamówienia " .
-                            "niż {$order->full_order_number}. " .
+                            "{$sourceForCopy->full_project_number}) ma inny numer projektu " .
+                            "niż {$project->full_project_number}. " .
                             "Można kopiować tylko z tej samej grupy serii.",
                         'errors' => [
-                            'copy_from_order_id' => [
-                                'Seria źródłowa musi mieć ten sam numer zamówienia.'
+                            'copy_from_project_id' => [
+                                'Seria źródłowa musi mieć ten sam numer projektu.'
                             ]
                         ]
                     ], 422);
                 }
 
-                // Sprawdź czy wszystkie warianty do skopiowania należą do copy_from_order_id
+                // Sprawdź czy wszystkie warianty do skopiowania należą do copy_from_project_id
                 if (!empty($validated['variants'])) {
-                    $sourceVariantIds = Variant::where('order_id', $sourceForCopy->id)
+                    $sourceVariantIds = Variant::where('project_id', $sourceForCopy->id)
                         ->pluck('id')
                         ->toArray();
 
@@ -185,7 +145,7 @@ class OrderSeriesController extends Controller
                             return response()->json([
                                 'message' => "Wariant #{$variantConfig['source_variant_id']} " .
                                     "nie należy do serii #{$sourceForCopy->id} " .
-                                    "({$sourceForCopy->full_order_number}).",
+                                    "({$sourceForCopy->full_project_number}).",
                                 'errors' => [
                                     'variants' => [
                                         "Wariant #{$variantConfig['source_variant_id']} " .
@@ -198,8 +158,8 @@ class OrderSeriesController extends Controller
                 }
             }
 
-            // Dane nowego zamówienia
-            $orderData = [
+            // Dane nowego projektu
+            $projectData = [
                 'description' => $validated['description'],
                 'planned_delivery_date' => $validated['planned_delivery_date'] ?? null,
                 'priority' => $validated['priority'] ?? 'normal',
@@ -208,31 +168,29 @@ class OrderSeriesController extends Controller
             // Warianty do skopiowania (null = pusta seria)
             $variantsToCopy = !empty($validated['variants']) ? $validated['variants'] : null;
 
-            // Tworzymy nową serię — zawsze na podstawie order_number z $order
-            // (niezależnie od tego, którą serię user wskazał jako źródło kopii)
-            $newOrder = $this->seriesService->createNewSeries(
-                sourceOrder: $order,
-                orderData: $orderData,
+            // Tworzymy nową serię
+            $newProject = $this->seriesService->createNewSeries(
+                sourceProject: $project,
+                projectData: $projectData,
                 variantsToCopy: $variantsToCopy
             );
 
             // Przygotuj opis tego co zostało zrobione
-            $summary = $this->buildCreationSummary($newOrder, $variantsToCopy, $sourceForCopy);
+            $summary = $this->buildCreationSummary($newProject, $variantsToCopy, $sourceForCopy);
 
             return response()->json([
-                'message' => "Nowa seria {$newOrder->full_order_number} utworzona pomyślnie.",
-                'data' => $newOrder,
+                'message' => "Nowa seria {$newProject->full_project_number} utworzona pomyślnie.",
+                'data' => $newProject,
                 'summary' => $summary,
             ], 201);
 
         } catch (\InvalidArgumentException $e) {
-            // Błędy walidacji biznesowej z SeriesService
             return response()->json([
                 'message' => $e->getMessage(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error("OrderSeriesController::create error: {$e->getMessage()}", [
-                'order_id' => $order->id,
+            Log::error("ProjectSeriesController::create error: {$e->getMessage()}", [
+                'project_id' => $project->id,
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -247,20 +205,16 @@ class OrderSeriesController extends Controller
     // POMOCNICZE
     // =========================================================================
 
-    /**
-     * Zbuduj czytelne podsumowanie operacji tworzenia serii.
-     * Używane do informowania frontendu co zostało wykonane.
-     */
     private function buildCreationSummary(
-        Order $newOrder,
+        Project $newProject,
         ?array $variantsToCopy,
-        ?Order $sourceOrder
+        ?Project $sourceProject
     ): array {
         $summary = [
-            'new_order_id' => $newOrder->id,
-            'new_full_order_number' => $newOrder->full_order_number,
-            'variants_created' => $newOrder->variants->count(),
-            'copied_from' => $sourceOrder?->full_order_number,
+            'new_project_id' => $newProject->id,
+            'new_full_project_number' => $newProject->full_project_number,
+            'variants_created' => $newProject->variants->count(),
+            'copied_from' => $sourceProject?->full_project_number,
         ];
 
         if (!empty($variantsToCopy)) {

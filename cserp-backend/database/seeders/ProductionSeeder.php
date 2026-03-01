@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\{
-    Order,
+    Project,
     Variant,
     Quotation,
     QuotationItem,
@@ -22,7 +22,7 @@ use App\Models\{
     Delivery
 };
 use App\Enums\{
-    OrderOverallStatus,
+    ProjectOverallStatus,
     PaymentStatus,
     AssortmentType,
     ProductionStatus,
@@ -80,29 +80,29 @@ class ProductionSeeder extends Seeder
             echo "🎯 Generowanie scenariuszy demonstracyjnych (1001-1005)...\n";
 
             // 1. ACME - Produkcja (ID 1001)
-            $this->createCorporateOrder();
+            $this->createCorporateProject();
 
             // 2. EventMasters - Seria zamówień (ID 1002, Serie 0001 i 0002)
-            $this->createEventSeriesOrder();
+            $this->createEventSeriesProject();
 
             // 3. Pilne zamówienie (ID 1003)
-            $this->createUrgentOrder();
+            $this->createUrgentProject();
 
             // 4. Problematyczne (ID 1004) - PROTOTYP
-            $this->createProblematicOrder();
+            $this->createProblematicProject();
 
             // 5. Wyceny (ID 1005)
-            $this->createMultiQuotationOrder();
+            $this->createMultiQuotationProject();
 
             // --- POPRAWKA: Przesunięcie licznika ---
             $this->orderCounter = 2000;
 
             echo "\n📊 Generowanie masowych danych (Zakończone i Anulowane)...\n";
-            $this->createCompletedOrders(10);
-            $this->createCancelledOrders(5);
+            $this->createCompletedProjects(10);
+            $this->createCancelledProjects(5);
 
             echo "\n🎲 Generowanie losowych aktywnych zamówień...\n";
-            $this->generateMassOrders(50);
+            $this->generateMassProjects(50);
 
             DB::commit();
 
@@ -125,20 +125,20 @@ class ProductionSeeder extends Seeder
     // SCENARIUSZE BIZNESOWE
     // =========================================================================
 
-    private function createCorporateOrder(): void
+    private function createCorporateProject(): void
     {
         $customer = $this->customers->where('name', 'ACME Corporation Sp. z o.o.')->first()
             ?? $this->customers->first();
 
         $num = '1001';
 
-        $order = Order::create([
+        $order = Project::create([
             'customer_id' => $customer->id,
-            'order_number' => $num,
+            'project_number' => $num,
             'series' => '0001',
             'description' => 'Stojaki displayowe premium do 50 salonów sprzedaży na terenie całej Polski. Wymagane logo firmy, podświetlenie LED, mobilność.',
             'planned_delivery_date' => Carbon::now()->addDays(20),
-            'overall_status' => OrderOverallStatus::PRODUCTION,
+            'overall_status' => ProjectOverallStatus::PRODUCTION,
             'payment_status' => PaymentStatus::PARTIAL,
             'created_at' => Carbon::now()->subDays(45),
         ]);
@@ -163,7 +163,7 @@ class ProductionSeeder extends Seeder
         // Brak approved prototype -> czyli w trakcie
     }
 
-    private function createEventSeriesOrder(): void
+    private function createEventSeriesProject(): void
     {
         $customer = $this->customers->where('name', 'EventMasters Organizacja Eventów')->first()
             ?? $this->customers->random();
@@ -171,13 +171,13 @@ class ProductionSeeder extends Seeder
         $num = '1002';
 
         // Seria 1: Etap pierwszy (Zakończony)
-        $order1 = Order::create([
+        $order1 = Project::create([
             'customer_id' => $customer->id,
-            'order_number' => $num,
+            'project_number' => $num,
             'series' => '0001',
             'description' => 'Kompleksowa zabudowa stoiska targowego 6x4m (Etap 1: Konstrukcja).',
             'planned_delivery_date' => Carbon::now()->subDays(10),
-            'overall_status' => OrderOverallStatus::COMPLETED,
+            'overall_status' => ProjectOverallStatus::COMPLETED,
             'payment_status' => PaymentStatus::PAID,
             'created_at' => Carbon::now()->subDays(60),
         ]);
@@ -189,13 +189,13 @@ class ProductionSeeder extends Seeder
         $this->createInvoiceAndPayment($order1, 45000 * 1.23);
 
         // Seria 2: Domówienie (Ten sam numer 1002, seria 0002)
-        $order2 = Order::create([
+        $order2 = Project::create([
             'customer_id' => $customer->id,
-            'order_number' => $num,
+            'project_number' => $num,
             'series' => '0002',
             'description' => 'Kompleksowa zabudowa stoiska (Etap 2: Oświetlenie i Brandy). Domówienie do konstrukcji.',
             'planned_delivery_date' => Carbon::now()->addDays(15),
-            'overall_status' => OrderOverallStatus::PROTOTYPE,
+            'overall_status' => ProjectOverallStatus::PROTOTYPE,
             'payment_status' => PaymentStatus::UNPAID,
             'created_at' => Carbon::now()->subDays(5),
         ]);
@@ -208,20 +208,20 @@ class ProductionSeeder extends Seeder
         $variant2->update(['is_approved' => false, 'feedback_notes' => 'Czekamy na akceptację jasności LED.']);
     }
 
-    private function createUrgentOrder(): void
+    private function createUrgentProject(): void
     {
         $customer = $this->customers->random();
         $num = '1003';
 
-        $order = Order::create([
+        $order = Project::create([
             'customer_id' => $customer->id,
-            'order_number' => $num,
+            'project_number' => $num,
             'series' => '0001',
             'description' => '[PILNE] Roll-upy reklamowe na targi za 2 tygodnie. Ekspresowa realizacja.',
             'planned_delivery_date' => Carbon::now()->addDays(5),
-            'overall_status' => OrderOverallStatus::PRODUCTION,
+            'overall_status' => ProjectOverallStatus::PRODUCTION,
             'payment_status' => PaymentStatus::UNPAID,
-            'priority' => \App\Enums\OrderPriority::URGENT,
+            'priority' => \App\Enums\ProjectPriority::URGENT,
             'created_at' => Carbon::now()->subDays(3),
         ]);
 
@@ -231,18 +231,18 @@ class ProductionSeeder extends Seeder
         $this->createActiveProduction($variant, 80);
     }
 
-    private function createProblematicOrder(): void
+    private function createProblematicProject(): void
     {
         $customer = $this->customers->random();
         $num = '1004';
 
-        $order = Order::create([
+        $order = Project::create([
             'customer_id' => $customer->id,
-            'order_number' => $num,
+            'project_number' => $num,
             'series' => '0001',
             'description' => 'Obudowy urządzeń medycznych - wymagana certyfikacja i precyzja wykonania.',
             'planned_delivery_date' => Carbon::now()->addDays(60),
-            'overall_status' => OrderOverallStatus::PROTOTYPE,
+            'overall_status' => ProjectOverallStatus::PROTOTYPE,
             'payment_status' => PaymentStatus::UNPAID,
             'created_at' => Carbon::now()->subDays(60),
         ]);
@@ -273,18 +273,18 @@ class ProductionSeeder extends Seeder
         ]);
     }
 
-    private function createMultiQuotationOrder(): void
+    private function createMultiQuotationProject(): void
     {
         $customer = $this->customers->random();
         $num = '1005';
 
-        $order = Order::create([
+        $order = Project::create([
             'customer_id' => $customer->id,
-            'order_number' => $num,
+            'project_number' => $num,
             'series' => '0001',
             'description' => 'Meble biurowe do open space - 50 stanowisk. Negocjacje cenowe.',
             'planned_delivery_date' => Carbon::now()->addDays(40),
-            'overall_status' => OrderOverallStatus::QUOTATION,
+            'overall_status' => ProjectOverallStatus::QUOTATION,
             'payment_status' => PaymentStatus::UNPAID,
             'created_at' => Carbon::now()->subDays(20),
         ]);
@@ -301,34 +301,34 @@ class ProductionSeeder extends Seeder
     // GENEROWANIE MASOWE
     // =========================================================================
 
-    private function generateMassOrders(int $count): void
+    private function generateMassProjects(int $count): void
     {
         $statusDistribution = [
-            OrderOverallStatus::DRAFT->value => 5,
-            OrderOverallStatus::QUOTATION->value => 20,
-            OrderOverallStatus::PROTOTYPE->value => 15,
-            OrderOverallStatus::PRODUCTION->value => 40,
-            OrderOverallStatus::DELIVERY->value => 20,
+            ProjectOverallStatus::DRAFT->value => 5,
+            ProjectOverallStatus::QUOTATION->value => 20,
+            ProjectOverallStatus::PROTOTYPE->value => 15,
+            ProjectOverallStatus::PRODUCTION->value => 40,
+            ProjectOverallStatus::DELIVERY->value => 20,
         ];
 
         for ($i = 0; $i < $count; $i++) {
             $rand = rand(1, 100);
             $cumulative = 0;
-            $selectedStatus = OrderOverallStatus::QUOTATION;
+            $selectedStatus = ProjectOverallStatus::QUOTATION;
 
             foreach ($statusDistribution as $status => $percentage) {
                 $cumulative += $percentage;
                 if ($rand <= $cumulative) {
-                    $selectedStatus = OrderOverallStatus::from($status);
+                    $selectedStatus = ProjectOverallStatus::from($status);
                     break;
                 }
             }
 
-            $this->createRandomOrder($selectedStatus);
+            $this->createRandomProject($selectedStatus);
         }
     }
 
-    private function createRandomOrder(OrderOverallStatus $orderStatus): void
+    private function createRandomProject(ProjectOverallStatus $orderStatus): void
     {
         $customer = $this->customers->random();
 
@@ -336,34 +336,34 @@ class ProductionSeeder extends Seeder
         $num = str_pad((string) $this->orderCounter, 4, '0', STR_PAD_LEFT);
 
         $daysAgo = match ($orderStatus) {
-            OrderOverallStatus::DRAFT => rand(1, 7),
-            OrderOverallStatus::QUOTATION => rand(5, 30),
-            OrderOverallStatus::PROTOTYPE => rand(20, 60),
-            OrderOverallStatus::PRODUCTION => rand(30, 90),
-            OrderOverallStatus::DELIVERY => rand(60, 100),
+            ProjectOverallStatus::DRAFT => rand(1, 7),
+            ProjectOverallStatus::QUOTATION => rand(5, 30),
+            ProjectOverallStatus::PROTOTYPE => rand(20, 60),
+            ProjectOverallStatus::PRODUCTION => rand(30, 90),
+            ProjectOverallStatus::DELIVERY => rand(60, 100),
             default => 30
         };
 
-        $order = Order::create([
+        $order = Project::create([
             'customer_id' => $customer->id,
-            'order_number' => $num,
+            'project_number' => $num,
             'series' => '0001',
             'description' => $this->getRandomDescription(),
             'planned_delivery_date' => Carbon::now()->addDays(rand(10, 60)),
             'overall_status' => $orderStatus,
-            'payment_status' => $this->getPaymentStatusForOrder($orderStatus),
+            'payment_status' => $this->getPaymentStatusForProject($orderStatus),
             'created_at' => Carbon::now()->subDays($daysAgo),
         ]);
 
         // Mapowanie statusu zamówienia na status wariantu
         $variantStatus = match ($orderStatus) {
-            OrderOverallStatus::DRAFT => VariantStatus::DRAFT,
-            OrderOverallStatus::QUOTATION => VariantStatus::QUOTATION,
-            OrderOverallStatus::PROTOTYPE => VariantStatus::PRODUCTION, // Prototyp jest "w produkcji"
-            OrderOverallStatus::PRODUCTION => VariantStatus::PRODUCTION,
-            OrderOverallStatus::DELIVERY => VariantStatus::DELIVERY,
-            OrderOverallStatus::COMPLETED => VariantStatus::COMPLETED,
-            OrderOverallStatus::CANCELLED => VariantStatus::CANCELLED,
+            ProjectOverallStatus::DRAFT => VariantStatus::DRAFT,
+            ProjectOverallStatus::QUOTATION => VariantStatus::QUOTATION,
+            ProjectOverallStatus::PROTOTYPE => VariantStatus::PRODUCTION, // Prototyp jest "w produkcji"
+            ProjectOverallStatus::PRODUCTION => VariantStatus::PRODUCTION,
+            ProjectOverallStatus::DELIVERY => VariantStatus::DELIVERY,
+            ProjectOverallStatus::COMPLETED => VariantStatus::COMPLETED,
+            ProjectOverallStatus::CANCELLED => VariantStatus::CANCELLED,
         };
 
         $variantsCount = rand(1, 3);
@@ -380,7 +380,7 @@ class ProductionSeeder extends Seeder
         }
     }
 
-    private function createCompletedOrders(int $count): void
+    private function createCompletedProjects(int $count): void
     {
         for ($i = 0; $i < $count; $i++) {
             $customer = $this->customers->random();
@@ -388,13 +388,13 @@ class ProductionSeeder extends Seeder
             $num = str_pad((string) $this->orderCounter, 4, '0', STR_PAD_LEFT);
             $daysAgo = rand(90, 365);
 
-            $order = Order::create([
+            $order = Project::create([
                 'customer_id' => $customer->id,
-                'order_number' => $num,
+                'project_number' => $num,
                 'series' => '0001',
                 'description' => $this->getRandomDescription(),
                 'planned_delivery_date' => Carbon::now()->subDays($daysAgo - rand(5, 20)),
-                'overall_status' => OrderOverallStatus::COMPLETED,
+                'overall_status' => ProjectOverallStatus::COMPLETED,
                 'payment_status' => rand(0, 10) > 2 ? PaymentStatus::PAID : PaymentStatus::PARTIAL,
                 'created_at' => Carbon::now()->subDays($daysAgo),
             ]);
@@ -435,20 +435,20 @@ class ProductionSeeder extends Seeder
         }
     }
 
-    private function createCancelledOrders(int $count): void
+    private function createCancelledProjects(int $count): void
     {
         for ($i = 0; $i < $count; $i++) {
             $customer = $this->customers->random();
             $this->orderCounter++;
             $num = str_pad((string) $this->orderCounter, 4, '0', STR_PAD_LEFT);
 
-            $order = Order::create([
+            $order = Project::create([
                 'customer_id' => $customer->id,
-                'order_number' => $num,
+                'project_number' => $num,
                 'series' => '0001',
                 'description' => $this->getRandomDescription() . ' [ANULOWANE]',
                 'planned_delivery_date' => Carbon::now()->addDays(30),
-                'overall_status' => OrderOverallStatus::CANCELLED,
+                'overall_status' => ProjectOverallStatus::CANCELLED,
                 'payment_status' => PaymentStatus::UNPAID,
                 'created_at' => Carbon::now()->subDays(rand(30, 100)),
             ]);
@@ -498,10 +498,10 @@ class ProductionSeeder extends Seeder
         }
     }
 
-    private function createVariant(Order $order, string $letter, string $name, int $quantity, VariantStatus $status, VariantType $type): Variant
+    private function createVariant(Project $project, string $letter, string $name, int $quantity, VariantStatus $status, VariantType $type): Variant
     {
         return Variant::create([
-            'order_id' => $order->id,
+            'project_id' => $project->id,
             'variant_number' => $letter,
             'name' => $name,
             'quantity' => $quantity,
@@ -747,11 +747,11 @@ class ProductionSeeder extends Seeder
         ]);
     }
 
-    private function createInvoiceAndPayment(Order $order, float $amount): void
+    private function createInvoiceAndPayment(Project $project, float $amount): void
     {
         $this->invoiceCounter++;
         $invoice = Invoice::create([
-            'order_id' => $order->id,
+            'project_id' => $project->id,
             'invoice_number' => 'FV/' . $this->year . '/' . str_pad((string) $this->invoiceCounter, 4, '0', STR_PAD_LEFT),
             'total_net' => $amount / 1.23,
             'total_gross' => $amount,
@@ -809,13 +809,13 @@ class ProductionSeeder extends Seeder
         return $desc[array_rand($desc)];
     }
 
-    private function getPaymentStatusForOrder(OrderOverallStatus $status): PaymentStatus
+    private function getPaymentStatusForProject(ProjectOverallStatus $status): PaymentStatus
     {
         return match ($status) {
-            OrderOverallStatus::PRODUCTION => rand(0, 10) > 7 ? PaymentStatus::PARTIAL : PaymentStatus::UNPAID,
-            OrderOverallStatus::DELIVERY => rand(0, 10) > 5 ? PaymentStatus::PARTIAL : PaymentStatus::UNPAID,
-            OrderOverallStatus::COMPLETED => rand(0, 10) > 3 ? PaymentStatus::PAID : PaymentStatus::PARTIAL,
-            OrderOverallStatus::CANCELLED => PaymentStatus::UNPAID,
+            ProjectOverallStatus::PRODUCTION => rand(0, 10) > 7 ? PaymentStatus::PARTIAL : PaymentStatus::UNPAID,
+            ProjectOverallStatus::DELIVERY => rand(0, 10) > 5 ? PaymentStatus::PARTIAL : PaymentStatus::UNPAID,
+            ProjectOverallStatus::COMPLETED => rand(0, 10) > 3 ? PaymentStatus::PAID : PaymentStatus::PARTIAL,
+            ProjectOverallStatus::CANCELLED => PaymentStatus::UNPAID,
             default => PaymentStatus::UNPAID,
         };
     }

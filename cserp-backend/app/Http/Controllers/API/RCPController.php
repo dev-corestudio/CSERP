@@ -52,7 +52,7 @@ class RcpController extends Controller
      */
     public function getTaskDetails(ProductionService $task): JsonResponse
     {
-        $task->load(['workstation', 'assignedWorker', 'productionOrder.variant.order.customer']);
+        $task->load(['workstation', 'assignedWorker', 'productionOrder.variant.project.customer']);
 
         $elapsedSeconds = 0;
 
@@ -99,21 +99,20 @@ class RcpController extends Controller
      */
     public function getAvailableVariants(): JsonResponse
     {
-        $variants = Variant::with(['order.customer'])
+        $variants = Variant::with(['project.customer'])
             ->where('status', 'PRODUCTION')
-            // ->whereHas('productionOrder')
             ->get()
             ->map(fn($variant) => [
                 'id' => $variant->id,
-                'order_id' => $variant->order_id,
-                'order_number' => $variant->order->order_number,
-                'series' => $variant->order->series,
-                'full_order_number' => $variant->order->full_order_number,
+                'project_id' => $variant->project_id,
+                'project_number' => $variant->project->project_number,
+                'series' => $variant->project->series,
+                'full_project_number' => $variant->project->full_project_number,
                 'variant_number' => $variant->variant_number,
                 'name' => $variant->name,
                 'quantity' => $variant->quantity,
-                'customer_name' => $variant->order->customer->name ?? 'Brak klienta',
-                'priority' => $variant->order->priority ?? 'NORMAL',
+                'customer_name' => $variant->project->customer->name ?? 'Brak klienta',
+                'priority' => $variant->project->priority ?? 'NORMAL',
                 'status' => $variant->status,
             ]);
 

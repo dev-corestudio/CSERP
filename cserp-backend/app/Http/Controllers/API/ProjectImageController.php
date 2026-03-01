@@ -3,30 +3,30 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\OrderImage;
+use App\Models\Project;
+use App\Models\ProjectImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 
-class OrderImageController extends Controller
+class ProjectImageController extends Controller
 {
     /**
-     * Pobierz wszystkie zdjęcia zamówienia
+     * Pobierz wszystkie zdjęcia projektu
      */
-    public function index(Order $order)
+    public function index(Project $project)
     {
-        $images = $order->images()
+        $images = $project->images()
             ->orderBy('sort_order')
             ->get();
-            
+
         return response()->json($images);
     }
 
     /**
      * Prześlij nowe zdjęcia
      */
-    public function store(Request $request, Order $order)
+    public function store(Request $request, Project $project)
     {
         $request->validate([
             'images' => 'required|array',
@@ -35,24 +35,24 @@ class OrderImageController extends Controller
         ]);
 
         $uploadedImages = [];
-        $maxSortOrder = $order->images()->max('sort_order') ?? 0;
+        $maxSortOrder = $project->images()->max('sort_order') ?? 0;
 
         foreach ($request->file('images') as $index => $file) {
             // Generuj unikalną nazwę
             $filename = time() . '_' . $index . '.' . $file->getClientOriginalExtension();
-            
+
             // Zapisz główne zdjęcie
-            $path = $file->storeAs('orders/' . $order->id . '/images', $filename, 'public');
-            
+            $path = $file->storeAs('projects/' . $project->id . '/images', $filename, 'public');
+
             // Wygeneruj thumbnail (200x200)
-            $thumbnailPath = 'orders/' . $order->id . '/thumbnails/' . $filename;
+            $thumbnailPath = 'projects/' . $project->id . '/thumbnails/' . $filename;
             $thumbnail = Image::make($file)
                 ->fit(200, 200)
                 ->encode();
             Storage::disk('public')->put($thumbnailPath, $thumbnail);
 
             // Utwórz rekord w bazie
-            $image = $order->images()->create([
+            $image = $project->images()->create([
                 'filename' => $file->getClientOriginalName(),
                 'path' => $path,
                 'thumbnail_path' => $thumbnailPath,
@@ -74,12 +74,12 @@ class OrderImageController extends Controller
     /**
      * Usuń zdjęcie
      */
-    public function destroy(Order $order, OrderImage $image)
+    public function destroy(Project $project, ProjectImage $image)
     {
-        // Sprawdź czy zdjęcie należy do zamówienia
-        if ($image->order_id !== $order->id) {
+        // Sprawdź czy zdjęcie należy do projektu
+        if ($image->project_id !== $project->id) {
             return response()->json([
-                'message' => 'Zdjęcie nie należy do tego zamówienia'
+                'message' => 'Zdjęcie nie należy do tego projektu'
             ], 403);
         }
 
@@ -100,17 +100,17 @@ class OrderImageController extends Controller
     /**
      * Zaktualizuj kolejność zdjęć
      */
-    public function updateOrder(Request $request, Order $order)
+    public function updateOrder(Request $request, Project $project)
     {
         $request->validate([
             'images' => 'required|array',
-            'images.*.id' => 'required|exists:order_images,id',
+            'images.*.id' => 'required|exists:project_images,id',
             'images.*.sort_order' => 'required|integer'
         ]);
 
         foreach ($request->input('images') as $imageData) {
-            OrderImage::where('id', $imageData['id'])
-                ->where('order_id', $order->id)
+            ProjectImage::where('id', $imageData['id'])
+                ->where('project_id', $project->id)
                 ->update(['sort_order' => $imageData['sort_order']]);
         }
 

@@ -7,42 +7,43 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
-use App\Enums\OrderOverallStatus;
+use App\Enums\ProjectOverallStatus;
 use App\Enums\PaymentStatus;
-use App\Enums\OrderPriority;
+use App\Enums\ProjectPriority;
 
-class Order extends Model
+class Project extends Model
 {
+    protected $table = 'projects';
+
     protected $fillable = [
         'customer_id',
-        'order_number',
+        'project_number',
         'series',
-        'description', // Zmiana z brief
-        'planned_delivery_date', // Nowe pole
+        'description',
+        'planned_delivery_date',
         'overall_status',
         'payment_status',
         'priority',
     ];
 
     protected $casts = [
-        'overall_status' => OrderOverallStatus::class,
+        'overall_status' => ProjectOverallStatus::class,
         'payment_status' => PaymentStatus::class,
-        'priority' => OrderPriority::class,
+        'priority' => ProjectPriority::class,
         'planned_delivery_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    // Dodajemy append, aby frontend łatwo dostał pełny numer
-    protected $appends = ['full_order_number'];
+    protected $appends = ['full_project_number'];
 
     /**
-     * Logika generowania serii dla danego numeru zamówienia.
+     * Logika generowania serii dla danego numeru projektu.
      */
-    public static function generateSeries(string $orderNumber): string
+    public static function generateSeries(string $projectNumber): string
     {
         // Pobierz najwyższą serię dla tego numeru
-        $lastSeries = self::where('order_number', $orderNumber)
+        $lastSeries = self::where('project_number', $projectNumber)
             ->max('series');
 
         if (!$lastSeries) {
@@ -54,11 +55,11 @@ class Order extends Model
     }
 
     /**
-     * Akcesor dla pełnego numeru wyświetlanego na froncie: Z/XXXX/YYYY
+     * Akcesor dla pełnego numeru wyświetlanego na froncie: P/XXXX/YYYY
      */
-    public function getFullOrderNumberAttribute(): string
+    public function getFullProjectNumberAttribute(): string
     {
-        return "Z/{$this->order_number}/{$this->series}";
+        return "P/{$this->project_number}/{$this->series}";
     }
 
     /**
@@ -98,7 +99,7 @@ class Order extends Model
      */
     public function images(): HasMany
     {
-        return $this->hasMany(OrderImage::class)->orderBy('sort_order');
+        return $this->hasMany(ProjectImage::class)->orderBy('sort_order');
     }
 
     /**
@@ -110,7 +111,7 @@ class Order extends Model
     }
 
     /**
-     * Sprawdź czy zamówienie ma zatwierdzoną wycenę
+     * Sprawdź czy projekt ma zatwierdzoną wycenę
      */
     public function hasApprovedQuotation(): bool
     {

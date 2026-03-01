@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
-class OrderImage extends Model
+class ProjectImage extends Model
 {
+    protected $table = 'project_images';
+
     protected $fillable = [
-        'order_id',
+        'project_id',
         'filename',
         'path',
         'thumbnail_path',
@@ -20,9 +22,9 @@ class OrderImage extends Model
 
     protected $appends = ['url', 'thumbnail_url'];
 
-    public function order()
+    public function project()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Project::class);
     }
 
     public function getUrlAttribute()

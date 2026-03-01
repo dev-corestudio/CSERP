@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum OrderOverallStatus: string
+enum ProjectOverallStatus: string
 {
     case DRAFT = 'DRAFT';
     case QUOTATION = 'QUOTATION';
