@@ -55,6 +55,7 @@ export interface Variant {
     quantity: number;
     type: 'PROTOTYPE' | 'SERIAL'; // NOWE
     status: string; // ZAMIAST status
+    priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
     is_approved: boolean; // NOWE (dla prototypu)
     feedback_notes?: string; // NOWE
 

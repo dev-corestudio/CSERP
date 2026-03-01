@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Enums\VariantType;
 use App\Enums\VariantStatus;
 use App\Enums\MaterialStatus;
+use App\Enums\ProjectPriority;
 
 class Variant extends Model
 {
@@ -24,6 +25,7 @@ class Variant extends Model
         'quantity',
         'type',
         'status',
+        'priority',
         'is_approved',
         'feedback_notes',
         'approved_prototype_id',
@@ -35,6 +37,7 @@ class Variant extends Model
         'quantity' => 'integer',
         'type' => VariantType::class,
         'status' => VariantStatus::class,
+        'priority' => ProjectPriority::class,
         'is_approved' => 'boolean',
         'tkw_z_wyceny' => 'decimal:2',
         'created_at' => 'datetime',

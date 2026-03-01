@@ -8,6 +8,7 @@ use App\Models\Variant;
 use App\Enums\VariantType;
 use App\Enums\VariantStatus;
 use App\Enums\MaterialStatus;
+use App\Enums\ProjectPriority;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -128,6 +129,7 @@ class VariantController extends Controller
             'quantity'    => 'required|integer|min:1',
             'type'        => ['required', Rule::enum(VariantType::class)],
             'description' => 'nullable|string',
+            'priority'    => ['nullable', Rule::enum(ProjectPriority::class)],
         ]);
 
         $variantNumber = $this->nextChildNumber($parent);
@@ -141,6 +143,7 @@ class VariantController extends Controller
             'type'             => $validated['type'],
             'description'      => $validated['description'] ?? null,
             'status'           => VariantStatus::DRAFT,
+            'priority'         => $validated['priority'] ?? ProjectPriority::NORMAL,
             'is_approved'      => false,
         ]);
 
@@ -170,6 +173,7 @@ class VariantController extends Controller
                 'description'     => 'nullable|string',
                 'type'            => ['sometimes', Rule::enum(VariantType::class)],
                 'status'          => ['sometimes', Rule::enum(VariantStatus::class)],
+                'priority'        => ['sometimes', Rule::enum(ProjectPriority::class)],
                 'is_approved'     => 'boolean',
                 'feedback_notes'  => 'nullable|string',
                 'tkw_z_wyceny'    => 'nullable|numeric|min:0',

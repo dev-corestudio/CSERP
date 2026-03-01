@@ -112,7 +112,7 @@ class RcpController extends Controller
                 'name' => $variant->name,
                 'quantity' => $variant->quantity,
                 'customer_name' => $variant->project->customer->name ?? 'Brak klienta',
-                'priority' => $variant->project->priority ?? 'NORMAL',
+                'priority' => $variant->priority ?? $variant->project->priority ?? 'NORMAL',
                 'status' => $variant->status,
             ]);
 

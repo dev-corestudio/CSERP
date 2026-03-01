@@ -111,6 +111,7 @@ export const useVariantsStore = defineStore('variants', () => {
       quantity: number
       type: 'SERIAL' | 'PROTOTYPE'
       description?: string
+      priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
     }
   ) => {
     loading.value = true

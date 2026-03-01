@@ -136,6 +136,19 @@
                 />
               </v-col>
 
+              <!-- Priorytet -->
+              <v-col cols="12" md="4">
+                <v-select
+                  v-model="form.priority"
+                  :items="priorityOptions"
+                  item-title="label"
+                  item-value="value"
+                  label="Priorytet"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-flag"
+                />
+              </v-col>
+
               <!-- Opis -->
               <v-col cols="12">
                 <v-textarea
@@ -232,6 +245,19 @@
                   prepend-inner-icon="mdi-list-status"
                 />
               </v-col>
+
+              <!-- Priorytet -->
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.priority"
+                  :items="priorityOptions"
+                  item-title="label"
+                  item-value="value"
+                  label="Priorytet"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-flag"
+                />
+              </v-col>
             </v-row>
           </template>
         </v-form>
@@ -316,12 +342,20 @@ const metadataStore = useMetadataStore();
 const formRef = ref<any>(null);
 const loading = ref(false);
 
+const priorityOptions = [
+  { value: "LOW", label: "Niski" },
+  { value: "NORMAL", label: "Normalny" },
+  { value: "HIGH", label: "Wysoki" },
+  { value: "URGENT", label: "Pilny" },
+];
+
 const defaultForm = () => ({
   name: "",
   description: "",
   quantity: 1,
   type: "SERIAL" as "SERIAL" | "PROTOTYPE",
   status: "PENDING",
+  priority: "NORMAL" as "LOW" | "NORMAL" | "HIGH" | "URGENT",
 });
 
 const form = ref(defaultForm());
@@ -430,6 +464,7 @@ watch(
         quantity: props.item.quantity ?? 1,
         type: props.item.type ?? "SERIAL",
         status: props.item.status ?? "PENDING",
+        priority: props.item.priority ?? "NORMAL",
       };
     } else {
       form.value = defaultForm();
@@ -456,6 +491,7 @@ const handleSubmit = async () => {
         quantity: form.value.quantity,
         type: form.value.type,
         description: form.value.description || undefined,
+        priority: form.value.priority,
       });
     } else if (isEditGroupMode.value || isEditVariantMode.value) {
       const payload: Record<string, any> = {
@@ -465,6 +501,7 @@ const handleSubmit = async () => {
       if (isEditVariantMode.value) {
         payload.quantity = form.value.quantity;
         payload.status = form.value.status;
+        payload.priority = form.value.priority;
       }
       await variantsStore.updateVariant(props.item!.id, payload);
     }
