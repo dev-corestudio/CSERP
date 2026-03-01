@@ -19,7 +19,45 @@
       </template>
     </page-header>
 
-    <v-card elevation="2" class="mt-4">
+    <!-- Filtry -->
+    <v-card elevation="2" class="mb-4">
+      <v-card-text>
+        <v-row align="center">
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="search"
+              prepend-inner-icon="mdi-magnify"
+              label="Szukaj (imię, email)..."
+              hide-details
+              density="compact"
+              variant="outlined"
+              clearable
+            />
+          </v-col>
+
+          <v-col cols="12" md="6" class="d-flex justify-end gap-2">
+            <v-btn
+              variant="outlined"
+              prepend-icon="mdi-filter-remove"
+              @click="resetFilters"
+            >
+              Resetuj filtry
+            </v-btn>
+            <v-btn
+              variant="outlined"
+              prepend-icon="mdi-refresh"
+              :loading="usersStore.loading"
+              @click="refreshList"
+            >
+              Odśwież
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <!-- Tabela -->
+    <v-card elevation="2">
       <v-data-table
         :headers="headers"
         :items="usersStore.items"
@@ -27,31 +65,6 @@
         :search="search"
         hover
       >
-        <template v-slot:top>
-          <v-toolbar flat density="compact" color="transparent" class="px-4 py-2">
-            <v-text-field
-              v-model="search"
-              prepend-inner-icon="mdi-magnify"
-              label="Szukaj (imię, email)..."
-              single-line
-              hide-details
-              density="compact"
-              variant="outlined"
-              style="max-width: 400px"
-            ></v-text-field>
-            <v-spacer></v-spacer>
-            <v-btn
-              icon
-              color="primary"
-              @click="refreshList"
-              :loading="usersStore.loading"
-            >
-              <v-icon>mdi-refresh</v-icon>
-            </v-btn>
-          </v-toolbar>
-        </template>
-
-        <!-- Role Column -->
         <template v-slot:item.role="{ item }">
           <v-chip
             size="small"
@@ -165,11 +178,12 @@ import { useUsersStore } from "@/stores/users";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import UserFormDialog from "@/components/users/UserFormDialog.vue";
 import { useStatusFormatter } from "@/composables/useStatusFormatter";
+import { usePersistedFilters } from "@/composables/usePersistedFilters";
 
 const usersStore = useUsersStore();
 const { formatUserRole } = useStatusFormatter();
 
-const search = ref("");
+const search = usePersistedFilters<string>("users:search", "");
 const dialog = ref(false);
 const editedUser = ref(null);
 
@@ -181,6 +195,10 @@ const headers = [
   { title: "Status", key: "is_active", align: "center" },
   { title: "Akcje", key: "actions", align: "end", sortable: false },
 ];
+
+const resetFilters = () => {
+  search.value = "";
+};
 
 const refreshList = async () => {
   await usersStore.fetchUsers();
