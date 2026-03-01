@@ -387,7 +387,7 @@ const getStatusColor = (status) => {
     completed: "success",
     cancelled: "error",
   };
-  return colors[status] || "grey";
+  return colors[status?.toLowerCase()] || "grey";
 };
 
 const getStatusLabel = (status) => {
@@ -400,7 +400,7 @@ const getStatusLabel = (status) => {
     completed: "Zakończone",
     cancelled: "Anulowane",
   };
-  return labels[status] || status;
+  return labels[status?.toLowerCase()] || status;
 };
 
 const getPaymentColor = (status) => {
@@ -410,7 +410,7 @@ const getPaymentColor = (status) => {
     paid: "success",
     overdue: "error",
   };
-  return colors[status] || "grey";
+  return colors[status?.toLowerCase()] || "grey";
 };
 
 const getPaymentLabel = (status) => {
@@ -420,7 +420,7 @@ const getPaymentLabel = (status) => {
     paid: "Opłacone",
     overdue: "Zaległe",
   };
-  return labels[status] || status;
+  return labels[status?.toLowerCase()] || status;
 };
 
 const showSnackbar = (message, color = "success") => {
