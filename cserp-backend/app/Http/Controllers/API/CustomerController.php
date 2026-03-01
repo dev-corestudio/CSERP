@@ -82,13 +82,14 @@ class CustomerController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'type' => 'required|in:B2B,B2C',
-                'nip' => 'nullable|string|max:10|unique:customers,nip',
-                'email' => 'nullable|email|max:255',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'nullable|string|max:500',
-                'is_active' => 'boolean',
+                'name'        => 'required|string|max:255',
+                'type'        => 'required|in:B2B,B2C',
+                'nip'         => 'nullable|string|max:10|unique:customers,nip',
+                'email'       => 'nullable|email|max:255',
+                'phone'       => 'nullable|string|max:20',
+                'address'     => 'nullable|string|max:500',
+                'is_active'   => 'boolean',
+                'assigned_to' => 'nullable|exists:users,id',
             ]);
 
             // Ustaw domyślne wartości
@@ -142,6 +143,7 @@ class CustomerController extends Controller
         try {
             // ── 1 query: załaduj WSZYSTKIE projekty (lekkie kolumny) ──
             $customer->load([
+                'assignedUser:id,name,role',
                 'projects' => function ($query) {
                     $query->select(
                         'id',
@@ -153,7 +155,7 @@ class CustomerController extends Controller
                         'payment_status',
                         'created_at'
                     )->orderBy('created_at', 'desc');
-                }
+                },
             ]);
 
             // ── 0 query: oblicz statystyki z załadowanej kolekcji ──
@@ -193,18 +195,19 @@ class CustomerController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'sometimes|required|string|max:255',
-                'type' => 'sometimes|required|in:B2B,B2C',
-                'nip' => [
+                'name'        => 'sometimes|required|string|max:255',
+                'type'        => 'sometimes|required|in:B2B,B2C',
+                'nip'         => [
                     'nullable',
                     'string',
                     'max:10',
                     Rule::unique('customers', 'nip')->ignore($customer->id)
                 ],
-                'email' => 'nullable|email|max:255',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'nullable|string|max:500',
-                'is_active' => 'boolean',
+                'email'       => 'nullable|email|max:255',
+                'phone'       => 'nullable|string|max:20',
+                'address'     => 'nullable|string|max:500',
+                'is_active'   => 'boolean',
+                'assigned_to' => 'nullable|exists:users,id',
             ]);
 
             $customer->update($validated);
@@ -368,7 +371,7 @@ class CustomerController extends Controller
         try {
             $customers = Customer::where('is_active', true)
                 ->orderBy('name')
-                ->select('id', 'name', 'type', 'nip', 'email')
+                ->select('id', 'name', 'type', 'nip', 'email', 'assigned_to')
                 ->get();
 
             return response()->json($customers);

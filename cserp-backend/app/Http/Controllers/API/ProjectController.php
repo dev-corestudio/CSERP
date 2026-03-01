@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\Project;
 use App\Traits\Paginatable;
 use Illuminate\Http\Request;
@@ -197,9 +198,14 @@ class ProjectController extends Controller
             // Pierwszy projekt z tym numerem → seria 0001
             $series = Project::generateSeries($projectNumber);
 
+            // Opiekun: jawnie podany → opiekun klienta → zalogowany użytkownik
+            $assignedTo = $validated['assigned_to']
+                ?? Customer::find($validated['customer_id'])?->assigned_to
+                ?? $request->user()->id;
+
             $project = Project::create([
                 'customer_id'           => $validated['customer_id'],
-                'assigned_to'           => $validated['assigned_to'] ?? $request->user()->id,
+                'assigned_to'           => $assignedTo,
                 'project_number'        => $projectNumber,
                 'series'                => $series,
                 'description'           => $validated['description'],

@@ -108,6 +108,23 @@
               />
             </v-col>
 
+            <!-- Opiekun klienta -->
+            <v-col cols="12">
+              <v-autocomplete
+                v-model="form.assigned_to"
+                :items="guardians"
+                item-title="name"
+                item-value="id"
+                label="Opiekun klienta"
+                prepend-inner-icon="mdi-account-tie"
+                variant="outlined"
+                :loading="loadingGuardians"
+                placeholder="Wybierz opiekuna..."
+                no-data-text="Brak dostępnych opiekunów"
+                clearable
+              />
+            </v-col>
+
             <!-- Status aktywności -->
             <v-col cols="12">
               <v-switch
@@ -150,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, computed } from "vue";
+import { ref, reactive, watch, computed, onMounted } from "vue";
 import api from "@/services/api";
 
 // Props - kompatybilne z v-model
@@ -173,6 +190,10 @@ const formRef = ref(null);
 const formValid = ref(false);
 const saving = ref(false);
 
+// Opiekunowie
+const guardians = ref<any[]>([]);
+const loadingGuardians = ref(false);
+
 // NIP lookup state
 const nipLoading = ref(false);
 const nipSuccess = ref(false);
@@ -189,6 +210,7 @@ const defaultForm = {
   phone: "",
   address: "",
   is_active: true,
+  assigned_to: null as number | null,
 };
 
 const form = reactive({ ...defaultForm });
@@ -230,6 +252,7 @@ watch(
           phone: props.customer.phone || "",
           address: props.customer.address || "",
           is_active: props.customer.is_active ?? true,
+          assigned_to: props.customer.assigned_to ?? null,
         });
       }
     }
@@ -251,7 +274,7 @@ watch(
 
 // Methods
 function resetForm() {
-  Object.assign(form, { ...defaultForm });
+  Object.assign(form, { ...defaultForm, assigned_to: null });
   Object.assign(nipAutoFilled, { name: false, address: false });
   nipMessage.value = "";
   nipSuccess.value = false;
@@ -262,6 +285,21 @@ function resetForm() {
 function closeDialog() {
   emit("update:modelValue", false);
 }
+
+// Pobierz listę opiekunów (TRADER + PROJECT_MANAGER)
+async function fetchGuardians() {
+  loadingGuardians.value = true;
+  try {
+    const response = await api.get("/users/for-select");
+    guardians.value = response.data || [];
+  } catch {
+    guardians.value = [];
+  } finally {
+    loadingGuardians.value = false;
+  }
+}
+
+onMounted(fetchGuardians);
 
 // Formatuj NIP podczas wpisywania
 function onNipInput(value) {
@@ -359,6 +397,7 @@ async function submitForm() {
       phone: form.phone || null,
       address: form.address || null,
       is_active: form.is_active,
+      assigned_to: form.assigned_to || null,
     };
 
     let response;

@@ -214,6 +214,7 @@
                 placeholder="Wybierz opiekuna..."
                 no-data-text="Brak dostępnych opiekunów"
                 clearable
+                @update:model-value="guardianManuallySet = true"
               >
                 <template v-slot:item="{ item, props: itemProps }">
                   <v-list-item v-bind="itemProps">
@@ -349,6 +350,9 @@ const selectedCustomer = computed(() => {
   if (!form.value.customer_id) return null;
   return customers.value.find((c) => c.id === form.value.customer_id) || null;
 });
+
+// Śledź czy opiekun był ręcznie zmieniony przez użytkownika
+const guardianManuallySet = ref(false);
 
 // ─── Metody ───────────────────────────────────────────────────────────────────
 
@@ -503,6 +507,18 @@ watch(
   { immediate: true }
 );
 
+/** Przy wyborze klienta auto-uzupełnij opiekuna z klienta (jeśli nie był ręcznie ustawiony) */
+watch(
+  () => form.value.customer_id,
+  (customerId) => {
+    if (isEditing.value || guardianManuallySet.value) return;
+    const customer = customers.value.find((c) => c.id === customerId);
+    if (customer?.assigned_to) {
+      form.value.assigned_to = customer.assigned_to;
+    }
+  }
+);
+
 /** Inicjalizuj przy otwarciu dialogu */
 watch(
   () => props.modelValue,
@@ -513,19 +529,29 @@ watch(
       if (!props.project) {
         // Nowy projekt: ustaw domyślne wartości
         form.value = defaultForm();
+        guardianManuallySet.value = false;
         const date = new Date();
         date.setDate(date.getDate() + 14);
         form.value.planned_delivery_date = date.toISOString().split("T")[0];
 
         if (props.preselectedCustomerId) {
           form.value.customer_id = props.preselectedCustomerId;
+          // Auto-uzupełnij opiekuna z klienta (jeśli klient ma opiekuna)
+          const preselectedCustomer = customers.value.find(
+            (c) => c.id === props.preselectedCustomerId
+          );
+          if (preselectedCustomer?.assigned_to) {
+            form.value.assigned_to = preselectedCustomer.assigned_to;
+          }
         }
 
-        // Auto-przypisz zalogowanego użytkownika jako opiekuna
-        // tylko jeśli jest na liście opiekunów (TRADER / PROJECT_MANAGER)
-        const currentUserId = authStore.user?.id;
-        if (currentUserId && guardians.value.some((g) => g.id === currentUserId)) {
-          form.value.assigned_to = currentUserId;
+        // Jeśli brak opiekuna z klienta — auto-przypisz zalogowanego użytkownika
+        // (tylko jeśli jest na liście opiekunów: TRADER / PROJECT_MANAGER)
+        if (!form.value.assigned_to) {
+          const currentUserId = authStore.user?.id;
+          if (currentUserId && guardians.value.some((g) => g.id === currentUserId)) {
+            form.value.assigned_to = currentUserId;
+          }
         }
 
         formRef.value?.resetValidation();

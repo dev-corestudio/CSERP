@@ -192,6 +192,17 @@
                 </div>
 
                 <div class="detail-row">
+                  <div class="label">Opiekun</div>
+                  <div class="value">
+                    <span v-if="customer.assigned_user">
+                      <v-icon size="small" class="mr-1">mdi-account-tie</v-icon>
+                      {{ customer.assigned_user.name }}
+                    </span>
+                    <span v-else class="text-medium-emphasis">Brak</span>
+                  </div>
+                </div>
+
+                <div class="detail-row">
                   <div class="label">Data utworzenia</div>
                   <div class="value text-medium-emphasis">{{ formatDate(customer.created_at) }}</div>
                 </div>
