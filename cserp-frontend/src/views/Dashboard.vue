@@ -110,12 +110,12 @@
         </v-card>
       </v-col>
 
-      <!-- ── Ostatnie projekty (tylko canManageSystem) ─────────── -->
+      <!-- ── Ostatnie otwarte projekty (per user, localStorage) ── -->
       <v-col v-if="authStore.canManageSystem" cols="12" md="8">
         <v-card class="rounded-xl" elevation="1">
           <v-card-title class="pa-4 pb-2 d-flex align-center">
-            <v-icon start size="18" color="primary">mdi-clock-outline</v-icon>
-            <span class="text-body-1 font-weight-bold">Ostatnie projekty</span>
+            <v-icon start size="18" color="primary">mdi-history</v-icon>
+            <span class="text-body-1 font-weight-bold">Ostatnie otwarte projekty</span>
             <v-spacer />
             <v-btn
               variant="text"
@@ -130,11 +130,7 @@
 
           <v-divider class="mx-4" />
 
-          <div v-if="projectsLoading" class="pa-6 text-center">
-            <v-progress-circular indeterminate color="primary" size="32" />
-          </div>
-
-          <v-list v-else-if="recentProjects.length" lines="two" class="py-0">
+          <v-list v-if="recentProjects.length" lines="two" class="py-0" density="compact">
             <v-list-item
               v-for="(project, i) in recentProjects"
               :key="project.id"
@@ -178,7 +174,7 @@
                     {{ getStatusLabel(project.overall_status) }}
                   </v-chip>
                   <span class="text-caption text-medium-emphasis">
-                    {{ formatDate(project.created_at) }}
+                    {{ formatDate(project.viewed_at) }}
                   </span>
                 </div>
               </template>
@@ -186,8 +182,8 @@
           </v-list>
 
           <div v-else class="pa-8 text-center text-medium-emphasis">
-            <v-icon size="40" class="mb-2">mdi-clipboard-text-off</v-icon>
-            <div class="text-body-2">Brak projektów</div>
+            <v-icon size="40" class="mb-2">mdi-clipboard-text-clock</v-icon>
+            <div class="text-body-2">Nie otwierałeś jeszcze żadnego projektu</div>
           </div>
         </v-card>
       </v-col>
@@ -198,9 +194,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import { useRecentProjects } from "@/composables/useRecentProjects";
 import api from "@/services/api";
 
 const authStore = useAuthStore();
+const { getAll: getRecentProjects } = useRecentProjects();
 
 // ── Data / time ────────────────────────────────────────────────────────────────
 
@@ -276,24 +274,9 @@ const fetchStats = async () => {
   }
 };
 
-// ── Recent projects ────────────────────────────────────────────────────────────
+// ── Recent projects (z localStorage per user) ──────────────────────────────────
 
-const projectsLoading = ref(false);
 const recentProjects = ref<any[]>([]);
-
-const fetchRecentProjects = async () => {
-  projectsLoading.value = true;
-  try {
-    const res = await api.get("/projects", {
-      params: { per_page: 7, sort_by: "created_at", sort_dir: "desc", quick_filter: "all" },
-    });
-    recentProjects.value = res.data.data ?? [];
-  } catch {
-    recentProjects.value = [];
-  } finally {
-    projectsLoading.value = false;
-  }
-};
 
 // ── Quick actions ──────────────────────────────────────────────────────────────
 
@@ -330,7 +313,8 @@ const formatDate = (date: string) =>
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchUser();
   if (authStore.canManageSystem) {
-    await Promise.all([fetchStats(), fetchRecentProjects()]);
+    recentProjects.value = getRecentProjects();
+    await fetchStats();
   }
 });
 </script>

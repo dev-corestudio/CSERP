@@ -180,6 +180,7 @@ import { useRoute, useRouter } from "vue-router";
 // Serwisy / narzędzia
 import api from "@/services/api";
 import { useStatusFormatter } from "@/composables/useStatusFormatter";
+import { useRecentProjects } from "@/composables/useRecentProjects";
 import { useVariantsStore } from "@/stores/variants";
 
 // Komponenty layout
@@ -201,6 +202,7 @@ const route = useRoute();
 const router = useRouter();
 const variantsStore = useVariantsStore();
 const { formatProjectStatus } = useStatusFormatter();
+const { track: trackRecentProject } = useRecentProjects();
 
 // ─── Referencje do komponentów ────────────────────────────────────────────────
 
@@ -280,6 +282,7 @@ async function fetchProject() {
   try {
     const res = await api.get(`/projects/${route.params.id}`);
     project.value = res.data.data || res.data;
+    trackRecentProject(project.value);
   } catch (err: any) {
     error.value = err.response?.data?.message || "Nie udało się pobrać projektu";
   } finally {
