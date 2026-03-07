@@ -181,8 +181,8 @@
                 class="mb-2"
               >
                 Znaleziono <strong>{{ variantsForCopy.length }}</strong>
-                {{ variantsForCopy.length === 1 ? "wariant" : "wariantów" }} do
-                skopiowania.
+                {{ variantsForCopy.length === 1 ? "pozycję" : "pozycje/pozycji" }} do
+                skopiowania (grupy kopiują wszystkie swoje warianty).
               </v-alert>
             </div>
           </v-expand-transition>
@@ -229,20 +229,37 @@
                 />
                 <div class="flex-grow-1">
                   <div class="d-flex align-center flex-wrap">
+                    <v-icon
+                      v-if="variant.is_group"
+                      size="small"
+                      color="indigo"
+                      class="mr-1"
+                    >mdi-folder</v-icon>
                     <span class="font-weight-bold mr-2"
                       >[{{ variant.variant_number }}] {{ variant.name }}</span
                     >
-                    <v-chip size="x-small" variant="outlined" class="mr-1">
-                      {{ variant.quantity }} szt
+                    <!-- Grupa: liczba dzieci -->
+                    <v-chip v-if="variant.is_group" size="x-small" color="indigo" variant="tonal" class="mr-1">
+                      {{ variant.children_count }} {{ variant.children_count === 1 ? 'wariant' : 'wariantów' }}
                     </v-chip>
-                    <v-chip
-                      size="x-small"
-                      :color="variant.type === 'PROTOTYPE' ? 'purple' : 'blue'"
-                      variant="flat"
-                      label
-                    >
-                      {{ variant.type === "PROTOTYPE" ? "PROTOTYP" : "SERIA" }}
-                    </v-chip>
+                    <!-- Wariant: ilość i typ -->
+                    <template v-else>
+                      <v-chip size="x-small" variant="outlined" class="mr-1">
+                        {{ variant.quantity }} szt
+                      </v-chip>
+                      <v-chip
+                        size="x-small"
+                        :color="variant.type === 'PROTOTYPE' ? 'purple' : 'blue'"
+                        variant="flat"
+                        label
+                      >
+                        {{ variant.type === "PROTOTYPE" ? "PROTOTYP" : "SERIA" }}
+                      </v-chip>
+                    </template>
+                  </div>
+
+                  <div v-if="variant.is_group && isVariantSelected(variant.id)" class="text-caption text-medium-emphasis mt-1">
+                    Kopiuje całą grupę z {{ variant.children_count }} {{ variant.children_count === 1 ? 'wariantem' : 'wariantami' }}
                   </div>
 
                   <v-expand-transition>
@@ -270,12 +287,11 @@
                                 : "mdi-close"
                             }}
                           </v-icon>
-                          Wycena
-                          <span v-if="variant.quotation_info" class="ml-1 opacity-70">
-                            (v{{ variant.quotation_info.version_number }}
-                            <template v-if="variant.quotation_info.is_approved"
-                              >✓</template
-                            >)
+                          Wyceny
+                          <span v-if="variant.is_group" class="ml-1 opacity-70">(wariantów)</span>
+                          <span v-else-if="variant.quotation_info" class="ml-1 opacity-70">
+                            (v{{ variant.quotation_info.version }}
+                            <template v-if="variant.quotation_info.is_approved">✓</template>)
                           </span>
                           <span v-else class="ml-1 opacity-50">(brak)</span>
                         </v-chip>
@@ -328,7 +344,7 @@
             class="mt-2"
           >
             Wybrano <strong>{{ selectedVariantCount }}</strong> z
-            {{ variantsForCopy.length }} wariantów.
+            {{ variantsForCopy.length }} pozycji.
             <span v-if="countCopyOptions.quotations > 0">
               {{ countCopyOptions.quotations }} z wycenami.
             </span>

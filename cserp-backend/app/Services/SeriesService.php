@@ -11,6 +11,7 @@ use App\Models\QuotationItemService;
 use App\Models\VariantMaterial;
 use App\Enums\MaterialStatus;
 use App\Enums\VariantStatus;
+use App\Enums\VariantType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -21,9 +22,6 @@ use App\Enums\ProjectPriority;
 
 /**
  * SeriesService — logika tworzenia nowych serii projektów
- *
- * Seria = to samo zamówienie (ten sam project_number) produkowane kolejny raz.
- * Przykład: P/0001/0001 → P/0001/0002 → P/0001/0003
  */
 class SeriesService
 {
@@ -31,9 +29,6 @@ class SeriesService
     // TWORZENIE NOWEJ SERII
     // =========================================================================
 
-    /**
-     * Utwórz nową serię dla danego projektu (tego samego project_number).
-     */
     public function createNewSeries(
         Project $sourceProject,
         array $projectData,
@@ -80,7 +75,7 @@ class SeriesService
     }
 
     // =========================================================================
-    // KOPIOWANIE WARIANTU
+    // KOPIOWANIE WARIANTU LUB GRUPY
     // =========================================================================
 
     public function copyVariantToProject(
@@ -93,6 +88,9 @@ class SeriesService
             'quotations.items.materials',
             'quotations.items.services',
             'materials',
+            'childVariants.quotations.items.materials',
+            'childVariants.quotations.items.services',
+            'childVariants.materials',
         ])->findOrFail($sourceVariantId);
 
         $sourceProject = $sourceVariant->project;
@@ -104,11 +102,16 @@ class SeriesService
             );
         }
 
+        if ($sourceVariant->is_group) {
+            return $this->copyGroupWithChildren($sourceVariant, $targetProject, $copyQuotation, $copyMaterials);
+        }
+
         $nextVariantNumber = $this->getNextVariantNumber($targetProject);
 
         $newVariant = Variant::create([
             'project_id' => $targetProject->id,
             'parent_variant_id' => null,
+            'is_group' => false,
             'variant_number' => $nextVariantNumber,
             'name' => $sourceVariant->name,
             'description' => $sourceVariant->description,
@@ -135,6 +138,103 @@ class SeriesService
         }
 
         return $newVariant->fresh(['quotations', 'materials']);
+    }
+
+    // =========================================================================
+    // KOPIOWANIE GRUPY Z DZIEĆMI
+    // =========================================================================
+
+    /**
+     * Kopiuje grupę wraz ze wszystkimi jej dziećmi (rekurencyjnie).
+     * Zachowuje strukturę numeracji: stary prefiks (np. "A") → nowy (np. "B").
+     */
+    private function copyGroupWithChildren(
+        Variant $sourceGroup,
+        Project $targetProject,
+        bool $copyQuotation,
+        bool $copyMaterials
+    ): Variant {
+        $newLetter = $this->getNextVariantNumber($targetProject);
+        $oldPrefix = $sourceGroup->variant_number;
+
+        $newGroup = Variant::create([
+            'project_id' => $targetProject->id,
+            'parent_variant_id' => null,
+            'is_group' => true,
+            'variant_number' => $newLetter,
+            'name' => $sourceGroup->name,
+            'description' => $sourceGroup->description,
+            'quantity' => 0,
+            'type' => VariantType::SERIAL,
+            'status' => VariantStatus::DRAFT,
+            'is_approved' => false,
+        ]);
+
+        Log::info(
+            "SeriesService: Skopiowano grupę #{$sourceGroup->id} ({$sourceGroup->variant_number}) " .
+            "→ #{$newGroup->id} ({$newLetter}) w projekcie #{$targetProject->id}"
+        );
+
+        foreach ($sourceGroup->childVariants as $child) {
+            $this->copyChildVariant(
+                $child, $newGroup, $targetProject,
+                $oldPrefix, $newLetter, $copyQuotation, $copyMaterials
+            );
+        }
+
+        return $newGroup->fresh(['childVariants']);
+    }
+
+    /**
+     * Kopiuje dziecko grupy pod nowego rodzica, zachowując sufiks numeru.
+     * Przykład: stary "A1" → nowy "B1" (oldPrefix="A", newPrefix="B").
+     * Działa rekurencyjnie dla poddzieci (A1_1 → B1_1).
+     */
+    private function copyChildVariant(
+        Variant $source,
+        Variant $newParent,
+        Project $targetProject,
+        string $oldPrefix,
+        string $newPrefix,
+        bool $copyQuotation,
+        bool $copyMaterials
+    ): Variant {
+        $suffix = substr($source->variant_number, strlen($oldPrefix));
+        $newNumber = $newPrefix . $suffix;
+
+        $newVariant = Variant::create([
+            'project_id' => $targetProject->id,
+            'parent_variant_id' => $newParent->id,
+            'is_group' => false,
+            'variant_number' => $newNumber,
+            'name' => $source->name,
+            'description' => $source->description,
+            'quantity' => $source->quantity,
+            'type' => $source->type,
+            'status' => VariantStatus::QUOTATION,
+            'is_approved' => false,
+            'feedback_notes' => null,
+            'approved_prototype_id' => null,
+        ]);
+
+        if ($copyQuotation) {
+            $this->copyBestQuotation($source, $newVariant);
+        }
+
+        if ($copyMaterials) {
+            $this->copyVariantMaterials($source, $newVariant);
+        }
+
+        // Rekurencyjnie kopiuj poddzieci
+        $source->load('childVariants.quotations.items.materials', 'childVariants.quotations.items.services', 'childVariants.materials');
+        foreach ($source->childVariants as $grandChild) {
+            $this->copyChildVariant(
+                $grandChild, $newVariant, $targetProject,
+                $oldPrefix, $newPrefix, $copyQuotation, $copyMaterials
+            );
+        }
+
+        return $newVariant;
     }
 
     // =========================================================================
@@ -306,27 +406,60 @@ class SeriesService
             ->get();
     }
 
+    /**
+     * Zwraca tylko top-level warianty (grupy i standalone) do selektora kopiowania.
+     * Grupy zwracają zagregowane info o dzieciach (czy mają wyceny/materiały).
+     */
     public function getVariantsForCopySelector(Project $project)
     {
-        return Variant::with(['approvedQuotation', 'materials'])
+        $variants = Variant::with([
+            'approvedQuotation',
+            'materials',
+            'childVariants.materials',
+            'childVariants.quotations',
+        ])
             ->where('project_id', $project->id)
+            ->whereNull('parent_variant_id')
             ->orderBy('variant_number')
-            ->get()
-            ->map(function (Variant $variant) {
+            ->get();
+
+        return $variants->map(function (Variant $variant) {
+            if ($variant->is_group) {
+                $children = $variant->childVariants;
+                $childrenHaveQuotation = $children->some(fn($c) => $c->quotations->isNotEmpty());
+                $childrenHaveMaterials = $children->some(fn($c) => $c->materials->isNotEmpty());
+                $totalMaterials = $children->sum(fn($c) => $c->materials->count());
+
                 return [
                     'id' => $variant->id,
                     'variant_number' => $variant->variant_number,
                     'name' => $variant->name,
-                    'quantity' => $variant->quantity,
-                    'status' => $variant->status,
-                    'type' => $variant->type,
-                    'has_quotation' => $variant->quotations()->exists(),
-                    'has_approved_quotation' => $variant->approvedQuotation !== null,
-                    'has_materials' => $variant->materials->isNotEmpty(),
-                    'materials_count' => $variant->materials->count(),
-                    'quotation_info' => $this->getQuotationInfo($variant),
+                    'is_group' => true,
+                    'children_count' => $children->count(),
+                    'has_quotation' => $childrenHaveQuotation,
+                    'has_materials' => $childrenHaveMaterials,
+                    'materials_count' => $totalMaterials,
+                    'quantity' => null,
+                    'type' => null,
+                    'quotation_info' => null,
                 ];
-            });
+            }
+
+            return [
+                'id' => $variant->id,
+                'variant_number' => $variant->variant_number,
+                'name' => $variant->name,
+                'is_group' => false,
+                'children_count' => 0,
+                'quantity' => $variant->quantity,
+                'status' => $variant->status,
+                'type' => $variant->type,
+                'has_quotation' => $variant->quotations()->exists(),
+                'has_materials' => $variant->materials->isNotEmpty(),
+                'materials_count' => $variant->materials->count(),
+                'quotation_info' => $this->getQuotationInfo($variant),
+            ];
+        });
     }
 
     private function getQuotationInfo(Variant $variant): ?array

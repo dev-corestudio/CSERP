@@ -28,15 +28,16 @@ export interface VariantForCopy {
     id: number
     variant_number: string
     name: string
-    type: string
-    status: string
-    quantity: number
+    is_group: boolean
+    children_count: number
+    type: string | null
+    status: string | null
+    quantity: number | null
     has_quotation: boolean
-    has_approved_quotation: boolean
     has_materials: boolean
     materials_count: number
     quotation_info: {
-        version_number: number
+        version: number
         is_approved: boolean
         total_gross: number
     } | null

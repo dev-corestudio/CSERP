@@ -251,12 +251,6 @@
                 </template>
                 <v-list density="compact" elevation="3" min-width="180">
                   <v-list-item
-                    prepend-icon="mdi-eye"
-                    @click="$emit('view', node.variant.id)"
-                  >
-                    <v-list-item-title>Szczegóły</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item
                     prepend-icon="mdi-pencil"
                     @click="$emit('edit', node.variant)"
                   >
