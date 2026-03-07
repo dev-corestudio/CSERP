@@ -13,8 +13,6 @@ use App\Models\{
     Prototype,
     ProductionOrder,
     ProductionService,
-    Invoice,
-    Payment,
     Assortment,
     Customer,
     User,
@@ -28,8 +26,6 @@ use App\Enums\{
     ProductionStatus,
     WorkstationStatus,
     TestResult,
-    InvoiceStatus,
-    PaymentMethod,
     DeliveryStatus,
     WorkstationType,
     VariantStatus,
@@ -50,7 +46,6 @@ class ProductionSeeder extends Seeder
     // Liczniki
     private $orderCounter = 1000;
     private $deliveryCounter = 0;
-    private $invoiceCounter = 0;
     private $year;
 
     public function run(): void
@@ -186,7 +181,6 @@ class ProductionSeeder extends Seeder
         $this->createApprovedQuotation($variant1, 45000);
         $this->createCompletedProduction($variant1);
         $this->createDelivery($variant1, DeliveryStatus::DELIVERED);
-        $this->createInvoiceAndPayment($order1, 45000 * 1.23);
 
         // Seria 2: Domówienie (Ten sam numer 1002, seria 0002)
         $order2 = Project::create([
@@ -431,7 +425,6 @@ class ProductionSeeder extends Seeder
                 ]);
             }
 
-            $this->createInvoiceAndPayment($order, $totalGross);
         }
     }
 
@@ -744,29 +737,6 @@ class ProductionSeeder extends Seeder
             'courier' => 'DHL',
             'status' => $status,
             'delivered_at' => $status === DeliveryStatus::DELIVERED ? Carbon::now()->subDays(1) : null,
-        ]);
-    }
-
-    private function createInvoiceAndPayment(Project $project, float $amount): void
-    {
-        $this->invoiceCounter++;
-        $invoice = Invoice::create([
-            'project_id' => $project->id,
-            'invoice_number' => 'FV/' . $this->year . '/' . str_pad((string) $this->invoiceCounter, 4, '0', STR_PAD_LEFT),
-            'total_net' => $amount / 1.23,
-            'total_gross' => $amount,
-            'issue_date' => Carbon::now()->subDays(30),
-            'payment_deadline' => Carbon::now()->subDays(16),
-            'status' => InvoiceStatus::PAID,
-            'paid_at' => Carbon::now()->subDays(10),
-        ]);
-
-        Payment::create([
-            'invoice_id' => $invoice->id,
-            'amount' => $amount,
-            'payment_date' => Carbon::now()->subDays(10),
-            'payment_method' => PaymentMethod::TRANSFER,
-            'transaction_id' => 'TRX-' . uniqid(),
         ]);
     }
 
