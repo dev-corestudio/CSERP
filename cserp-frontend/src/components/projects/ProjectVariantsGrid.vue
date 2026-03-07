@@ -98,6 +98,14 @@
                 </template>
                 <v-list density="compact" elevation="3" min-width="180">
                   <v-list-item
+                    prepend-icon="mdi-plus"
+                    class="text-indigo"
+                    @click="$emit('add-child', node.variant)"
+                  >
+                    <v-list-item-title>Dodaj wariant</v-list-item-title>
+                  </v-list-item>
+                  <v-divider />
+                  <v-list-item
                     prepend-icon="mdi-pencil"
                     @click="$emit('edit', node.variant)"
                   >
