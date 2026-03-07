@@ -53,27 +53,4 @@ class PrototypeMaterial extends Model
         return $this->belongsTo(Assortment::class, 'assortment_id');
     }
 
-    /**
-     * Czy materiał jest w pełni dostępny
-     */
-    public function isFullyAvailable(): bool
-    {
-        return $this->status === MaterialStatus::IN_STOCK;
-    }
-
-    /**
-     * Czy materiał wymaga zamówienia
-     */
-    public function needsOrdering(): bool
-    {
-        return $this->status === MaterialStatus::NOT_ORDERED;
-    }
-
-    /**
-     * Oblicz koszt całkowity
-     */
-    public function recalculateTotalCost(): void
-    {
-        $this->total_cost = $this->quantity * $this->unit_price;
-    }
 }

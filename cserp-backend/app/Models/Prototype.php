@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\TestResult;
 use App\Enums\MaterialStatus;
-use App\Enums\ProductionStatus;
 
 /**
  * Model Prototype (Prototyp)
@@ -112,31 +111,11 @@ class Prototype extends Model
     // =========================================================================
 
     /**
-     * Czy wszystkie zadania RCP prototypu zostały zakończone
-     */
-    public function allServicesCompleted(): bool
-    {
-        if ($this->services->isEmpty()) {
-            return true;
-        }
-
-        return $this->services->every(fn($s) => $s->status === ProductionStatus::COMPLETED);
-    }
-
-    /**
      * Łączny szacowany koszt usług prototypu
      */
     public function getTotalServicesCostAttribute(): float
     {
         return (float) $this->services->sum('estimated_cost');
-    }
-
-    /**
-     * Łączny rzeczywisty koszt usług prototypu
-     */
-    public function getTotalActualServicesCostAttribute(): float
-    {
-        return (float) $this->services->sum('actual_cost');
     }
 
     /**

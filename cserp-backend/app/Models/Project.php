@@ -96,14 +96,6 @@ class Project extends Model
     }
 
     /**
-     * Faktury
-     */
-    public function invoices(): HasMany
-    {
-        return $this->hasMany(Invoice::class);
-    }
-
-    /**
      * Zdjęcia
      */
     public function images(): HasMany
@@ -119,21 +111,4 @@ class Project extends Model
         return $this->hasManyThrough(ProductionOrder::class, Variant::class);
     }
 
-    /**
-     * Sprawdź czy projekt ma zatwierdzoną wycenę
-     */
-    public function hasApprovedQuotation(): bool
-    {
-        return $this->quotations()->where('is_approved', true)->exists();
-    }
-
-    /**
-     * Pobierz sumę wartości wszystkich zatwierdzonych wycen
-     */
-    public function getApprovedQuotationsTotalAttribute(): float
-    {
-        return $this->quotations()
-            ->where('is_approved', true)
-            ->sum('total_gross');
-    }
 }

@@ -95,20 +95,4 @@ class Assortment extends Model
         ]);
     }
 
-    public function scopeMaterials($query)
-    {
-        return $query->where('type', 'material');
-    }
-
-    public function scopeServices($query)
-    {
-        return $query->where('type', 'service');
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-
 }

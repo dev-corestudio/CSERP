@@ -103,29 +103,6 @@ class Variant extends Model
         return $this->type === VariantType::PROTOTYPE;
     }
 
-    public function isSerial(): bool
-    {
-        return $this->type === VariantType::SERIAL;
-    }
-
-    public function isChild(): bool
-    {
-        return $this->parent_variant_id !== null;
-    }
-
-    /**
-     * Wszyscy potomkowie rekurencyjnie — uzywane przy force delete.
-     */
-    public function allDescendants(): \Illuminate\Support\Collection
-    {
-        $descendants = collect();
-        foreach ($this->childVariants as $child) {
-            $descendants->push($child);
-            $descendants = $descendants->merge($child->allDescendants());
-        }
-        return $descendants;
-    }
-
     public function getMaterialsStatusSummaryAttribute(): array
     {
         $materials = $this->materials;

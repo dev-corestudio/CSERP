@@ -65,27 +65,4 @@ class PrototypeService extends Model
         return $this->belongsTo(User::class, 'assigned_to_user_id');
     }
 
-    /**
-     * Czy zadanie jest aktywne
-     */
-    public function isActive(): bool
-    {
-        return $this->status === ProductionStatus::IN_PROGRESS;
-    }
-
-    /**
-     * Czy zadanie jest wstrzymane
-     */
-    public function isPaused(): bool
-    {
-        return $this->status === ProductionStatus::PAUSED;
-    }
-
-    /**
-     * Oblicz szacowany koszt
-     */
-    public function recalculateEstimatedCost(): void
-    {
-        $this->estimated_cost = $this->estimated_quantity * $this->unit_price;
-    }
 }

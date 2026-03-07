@@ -409,4 +409,3 @@ export const VARIANT_TYPES: StatusMap = {
 
 
 
-export const PRIORITIES = ORDER_PRIORITIES

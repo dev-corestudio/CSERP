@@ -32,20 +32,11 @@ class Workstation extends Model
             ->withTimestamps();
     }
 
-    public function tasks()
-    {
-        return $this->hasMany(ProductionService::class, 'workstation_id');
-    }
-
     public function currentTask()
     {
         return $this->belongsTo(ProductionService::class, 'current_task_id');
     }
 
-    public function scopeAvailable($query)
-    {
-        return $query->where('status', WorkstationStatus::IDLE);
-    }
 
 
     public function allowedServices()

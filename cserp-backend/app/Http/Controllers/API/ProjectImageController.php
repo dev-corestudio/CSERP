@@ -97,25 +97,4 @@ class ProjectImageController extends Controller
         ]);
     }
 
-    /**
-     * Zaktualizuj kolejność zdjęć
-     */
-    public function updateOrder(Request $request, Project $project)
-    {
-        $request->validate([
-            'images' => 'required|array',
-            'images.*.id' => 'required|exists:project_images,id',
-            'images.*.sort_order' => 'required|integer'
-        ]);
-
-        foreach ($request->input('images') as $imageData) {
-            ProjectImage::where('id', $imageData['id'])
-                ->where('project_id', $project->id)
-                ->update(['sort_order' => $imageData['sort_order']]);
-        }
-
-        return response()->json([
-            'message' => 'Kolejność zaktualizowana'
-        ]);
-    }
 }

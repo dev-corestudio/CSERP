@@ -73,23 +73,4 @@ class ProductionService extends Model
         return $this->hasMany(ServiceTimeLog::class);
     }
 
-    public function scopePending($query)
-    {
-        return $query->where('status', ProductionStatus::PLANNED);
-    }
-
-    public function scopeInProgress($query)
-    {
-        return $query->where('status', ProductionStatus::IN_PROGRESS);
-    }
-
-    public function isActive(): bool
-    {
-        return $this->status === ProductionStatus::IN_PROGRESS;
-    }
-
-    public function isPaused(): bool
-    {
-        return $this->status === ProductionStatus::PAUSED;
-    }
 }

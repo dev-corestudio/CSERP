@@ -1,6 +1,5 @@
 import {
     format,
-    formatDistanceToNow,
     parseISO,
     isValid,
 } from 'date-fns'
@@ -23,17 +22,8 @@ export interface FormattersReturn {
     /** Formatuje sekundy jako HH:MM:SS: 3665 → "01:01:05" */
     formatDuration: (totalSeconds: number) => string
 
-    /** Formatuje godziny jako HH:MM:SS: 1.0167 → "01:01:05" */
-    formatHours: (hours: number) => string
-
     /** Konwertuje ISO na format datetime-local dla inputa HTML: "2024-01-15T10:30:00Z" → "2024-01-15T10:30" */
     toInputDate: (isoString: string | null | undefined) => string
-
-    /** Formatuje względny czas: "2 godziny temu", "za 3 dni" */
-    formatRelative: (dateStr: string | null | undefined) => string
-
-    /** Formatuje wartość procentową z znakiem: -3.1 → "-3.1%", 5.2 → "+5.2%" */
-    formatVariancePercent: (percent: number | null | undefined) => string
 
     /** Zwraca kolor Vuetify dla wariancji: green/red/warning */
     varianceColor: (percent: number | null | undefined) => string
@@ -119,17 +109,6 @@ export function useFormatters(): FormattersReturn {
     }
 
     // ---
-    // formatHours
-    // ---
-    // Konwertuje godziny (np. 1.5) na HH:MM:SS
-    // Używane w liveTimerDisplay w VariantDetail zamiast ręcznych obliczeń
-    // ---
-    const formatHours = (hours: number): string => {
-        if (!hours || hours < 0) return '00:00:00'
-        return formatDuration(Math.floor(hours * 3600))
-    }
-
-    // ---
     // toInputDate
     // ---
     // Przed refaktorem: identyczna funkcja w TaskEditDialog.vue i TimeLogsDialog.vue:
@@ -156,31 +135,6 @@ export function useFormatters(): FormattersReturn {
     }
 
     // ---
-    // formatRelative
-    // ---
-    const formatRelative = (dateStr: string | null | undefined): string => {
-        if (!dateStr) return '-'
-
-        try {
-            const date = parseISO(dateStr)
-            if (!isValid(date)) return '-'
-
-            return formatDistanceToNow(date, { locale: pl, addSuffix: true })
-        } catch {
-            return '-'
-        }
-    }
-
-    // ---
-    // formatVariancePercent
-    // ---
-    const formatVariancePercent = (percent: number | null | undefined): string => {
-        if (percent == null) return '-'
-        const sign = percent > 0 ? '+' : ''
-        return `${sign}${Number(percent).toFixed(1)}%`
-    }
-
-    // ---
     // varianceColor
     // ---
     // Przed refaktorem: logika kolorów wariancji była w useTimer.ts
@@ -200,10 +154,7 @@ export function useFormatters(): FormattersReturn {
         formatDate,
         formatDateOnly,
         formatDuration,
-        formatHours,
         toInputDate,
-        formatRelative,
-        formatVariancePercent,
         varianceColor,
     }
 }
